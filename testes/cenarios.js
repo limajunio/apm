@@ -138,14 +138,11 @@ const TODOS = [...CFO, ...AFO, 'teste-admissao', 'graduacao'];
     ok(!d.querySelector('#apm-app b'), 'nick com HTML não pode virar tag');
     const nickEl = cards[0].querySelector('.mural-nick');
     ok(w.getComputedStyle(nickEl).whiteSpace === 'nowrap' && w.getComputedStyle(nickEl).textOverflow === 'ellipsis', 'nick em uma linha com reticências');
-    // status: cards aparecem antes, bolinhas atualizam depois
-    const carregandoNoInicio = d.querySelectorAll('.mural-status.carregando').length;
-    ok(carregandoNoInicio > 0, 'bolinhas começam em "carregando" (cards não esperam o status)');
-    await esperar(400);
-    const dots = [...d.querySelectorAll('.mural-status')];
-    ok(dots.every(s => s.classList.contains('online') || s.classList.contains('offline')), 'todas as bolinhas atualizaram');
-    ok(dots[0].classList.contains('online'), 'usuário logado aparece online');
-    ok(dots.some(s => s.classList.contains('offline')), 'existe membro offline (vermelho)');
+    // sem indicador online/offline: todos os cards iguais e coloridos
+    await esperar(200);
+    ok(!d.querySelector('.mural-status, [data-status-nick]'), 'Mural não tem bolinha de status');
+    ok(!cards.some(c => c.classList.contains('offline') || c.classList.contains('online')), 'nenhum card marcado online/offline');
+    ok(!/grayscale/.test(fonte), 'nenhum avatar em escala de cinza');
     // visual estilo WaveX
     ok(d.querySelector('.mural-titulo h1')?.textContent === 'MURAL', 'título "MURAL"');
     const img = cards[0].querySelector('.mural-busto img');
@@ -154,9 +151,6 @@ const TODOS = [...CFO, ...AFO, 'teste-admissao', 'graduacao'];
     ok(w.getComputedStyle(janela).overflow === 'hidden' && w.getComputedStyle(janela).bottom === '0px', 'janela do busto com overflow:hidden alinhada na base');
     ok(/image-rendering:\s*pixelated/.test(fonte), 'CSS com image-rendering: pixelated');
     ok(!cards.some(c => c.querySelector('.avatar-crop')), 'Mural não usa mais o avatar de corpo inteiro');
-    ok(d.querySelector('.mural-grid').classList.contains('cinza-offline'), 'MURAL_CINZA_OFFLINE ligado por padrão');
-    const offlineCard = dots.find(s => s.classList.contains('offline')).closest('.mural-card');
-    ok(offlineCard.classList.contains('offline'), 'card offline recebe a classe para o avatar ficar cinza');
     ok(erros.length === 0, 'erros de JS: ' + erros.join(' | '));
   }
 

@@ -213,9 +213,7 @@
     position: absolute; max-width: none;
     image-rendering: crisp-edges;   /* fallback (Firefox antigo) */
     image-rendering: pixelated;     /* pixels nítidos, sem borrar */
-    transition: filter .3s ease, opacity .3s ease;
   }
-  .mural-grid.cinza-offline .mural-card.offline .mural-busto img { filter: grayscale(1); opacity: .55; }
 
   .mural-info { flex: 1; min-width: 0; text-align: center; }
   .mural-nick {
@@ -228,14 +226,6 @@
     white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
   }
   .mural-card.comandante .mural-cargo { color: var(--apm-accent); }
-  .mural-status {
-    width: 8px; height: 8px; border-radius: 999px; flex-shrink: 0;
-    background: #6b7280; transition: background .2s ease, box-shadow .2s ease;
-  }
-  .mural-status.carregando { animation: apm-pulso 1.2s ease-in-out infinite; }
-  .mural-status.online { background: #22c55e; box-shadow: 0 0 6px rgba(34,197,94,.7); }
-  .mural-status.offline { background: #ef4444; }
-  @keyframes apm-pulso { 50% { opacity: .35; } }
 
   /* ---------- Regimento Interno (tudo escopado em .apm-regimento) ---------- */
   .apm-regimento .reg-layout { display: grid; grid-template-columns: minmax(0, 1fr); gap: 20px; align-items: start; }
@@ -611,9 +601,6 @@ const CONFIG = {
   // Ordem dos cargos no Mural (depois vêm os demais cargos, em ordem alfabética).
   ordemMural: ['Comandante', 'Subcomandante', 'Coordenador', 'Instrutor'],
 
-  // Mural: avatar de membro offline em escala de cinza (false = sempre colorido).
-  MURAL_CINZA_OFFLINE: true,
-
   // Recorte do busto no Mural, em pixels da imagem do Habblet (size=l, 180x260,
   // que é o sprite base ampliado 2x). Medido nos avatares: topo da cabeça ~y68,
   // calça começa em ~y184–190; corte em y182 para nunca mostrar calça/perna.
@@ -691,8 +678,6 @@ function criarMockDev() {
   const cargosExtras = ['Instrutor', 'Aluno', 'Aluno', 'Aluno', 'Coordenador'];
   for (let i = 1; i <= extras; i++) membros.push({ nick: `Membro.${String(i).padStart(3, '0')}`, cargo: cargosExtras[i % cargosExtras.length] });
   membros.forEach((m, i) => figureCache.set(m.nick.toLowerCase(), Promise.resolve(DEV_FIGURES[i % DEV_FIGURES.length])));
-  // Online simulado: alterna por posição. Responde com atraso, como a API real.
-  const online = new Map(membros.map((m, i) => [m.nick.toLowerCase(), i % 3 !== 1]));
 
   const resposta = (dados, status = 200) => Promise.resolve({ ok: status < 400, status, json: () => Promise.resolve(dados) });
   return {
@@ -702,8 +687,7 @@ function criarMockDev() {
       if (caminho === `grupos/${GRUPO_APM}/membros`) return Promise.resolve({ membros: membros.slice() });
       if (caminho.startsWith('usuarios/')) {
         const alvo = decodeURIComponent(caminho.slice('usuarios/'.length));
-        if (mesmoNick(alvo, nick)) return Promise.resolve({ nick, grupos: [], online: true });
-        return new Promise(r => setTimeout(() => r({ nick: alvo, online: online.get(alvo.toLowerCase()) === true }), 20));
+        return Promise.resolve({ nick: alvo, grupos: [] });
       }
       return Promise.reject(new Error('mock: rota não simulada ' + caminho));
     },
@@ -1362,45 +1346,6 @@ function membrosOrdenadosMural() {
     compararTexto(a.nick, b.nick));
 }
 
-/* ---------- Status online (bolinha) ----------
-   Busca /usuarios/{nick} de cada membro em paralelo (até 8 por vez), depois
-   que os cards já estão na tela. Resultado fica em cache durante a visita. */
-const statusOnline = new Map(); // nick minúsculo -> true | false
-let statusCarregando = null;
-
-function aplicarStatus(escopo) {
-  escopo.querySelectorAll('[data-status-nick]').forEach(el => {
-    const valor = statusOnline.get(el.dataset.statusNick.toLowerCase());
-    if (valor === undefined) return;
-    el.classList.remove('carregando');
-    el.classList.toggle('online', valor === true);
-    el.classList.toggle('offline', valor !== true);
-    el.title = valor === true ? 'Online' : 'Offline';
-    el.setAttribute('aria-label', el.title);
-    // visual: o card sabe o status (avatar em cinza quando offline)
-    const card = el.closest('.mural-card');
-    if (card) { card.classList.toggle('online', valor === true); card.classList.toggle('offline', valor !== true); }
-  });
-}
-
-function carregarStatusMembros() {
-  if (statusCarregando) return statusCarregando;
-  const fila = membrosAPM.map(m => m.nick).filter(n => !statusOnline.has(n.toLowerCase()));
-  const trabalhador = async () => {
-    while (fila.length) {
-      const nick = fila.shift();
-      let online = false;
-      try { online = (await apiSystem(`usuarios/${nickNaUrl(nick)}`))?.online === true; } catch (e) { /* offline */ }
-      statusOnline.set(nick.toLowerCase(), online);
-      const app = document.getElementById('apm-app');
-      if (app.querySelector('.mural-grid')) aplicarStatus(app);
-    }
-  };
-  statusCarregando = Promise.all(Array.from({ length: Math.min(8, fila.length) }, trabalhador))
-    .finally(() => { statusCarregando = null; });
-  return statusCarregando;
-}
-
 // Medidas do busto em pixels de tela, a partir de CONFIG.muralAvatar.
 function medidasBusto() {
   const { escala, cintura, xInicio, xFim } = CONFIG.muralAvatar;
@@ -1434,7 +1379,6 @@ function cardMuralHtml(m) {
         <p class="mural-nick" title="${escapeHtml(m.nick)}">${escapeHtml(m.nick)}</p>
         <p class="mural-cargo">${escapeHtml(m.cargo || 'Membro')}</p>
       </div>
-      <span class="mural-status carregando" data-status-nick="${escapeHtml(m.nick)}" role="img" aria-label="Verificando status" title="Verificando status"></span>
     </div>`;
 }
 
@@ -1457,13 +1401,10 @@ function renderMural() {
 
       ${membros.length === 0 ? `
         <div class="glass-card p-8 text-center"><p class="text-sm text-muted">Nenhum membro encontrado.</p></div>` : `
-        <div class="mural-grid ${CONFIG.MURAL_CINZA_OFFLINE ? 'cinza-offline' : ''}"
-             style="--mural-busto-w:${medidasBusto().janelaW}px;">${membros.map(cardMuralHtml).join('')}</div>`}
+        <div class="mural-grid" style="--mural-busto-w:${medidasBusto().janelaW}px;">${membros.map(cardMuralHtml).join('')}</div>`}
     </div>`;
 
-  aplicarStatus(app);          // o que já estiver em cache aparece na hora
   resolverAvatares(app);       // sem await: os cards já estão na tela
-  carregarStatusMembros();     // bolinhas atualizam conforme as respostas chegam
 }
 
 /* ============================================================
