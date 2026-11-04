@@ -1,0 +1,11 @@
+{
+  "name": "apm",
+  "private": true,
+  "description": "Site da APM (Academia de Polícia Militar) - CIA Habblet",
+  "scripts": {
+    "test": "node testes/cenarios.js"
+  },
+  "devDependencies": {
+    "jsdom": "24.1.3"
+  }
+}

@@ -1,0 +1,20 @@
+# Código de outra pessoa (referência local) — o repositório é público
+INS.html
+
+# Conteúdo local que não vai para o repositório
+conteudo/
+
+# Dependências dos testes
+node_modules/
+package-lock.json
+
+# Arquivos temporários de teste
+*.tmp
+*.log
+apm_check.js
+testes/saida/
+
+# Sistema
+.DS_Store
+Thumbs.db
+desktop.ini

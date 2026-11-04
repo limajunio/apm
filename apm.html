@@ -23,7 +23,14 @@
     --apm-hover: #f5f0f1;
   }
 
-  #apm-root *, #apm-bloqueio *, #apm-toast, #apm-dev-badge { font-family: 'Plus Jakarta Sans', sans-serif; }
+  /* Fonte do site. Os ícones do Font Awesome (<i> e classes fa-*) ficam de fora:
+     um seletor com #id tem prioridade sobre .fa-solid e trocaria a fonte dos
+     ícones, que aparecem como quadrados vazios. */
+  #apm-root, #apm-bloqueio, #apm-toast, #apm-dev-badge,
+  #apm-root *:not(i):not(.fa):not([class^="fa-"]):not([class*=" fa-"]),
+  #apm-bloqueio *:not(i):not(.fa):not([class^="fa-"]):not([class*=" fa-"]) {
+    font-family: 'Plus Jakarta Sans', sans-serif;
+  }
   body { background: var(--apm-bg); color: var(--apm-text); }
 
   .glass-card {
