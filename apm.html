@@ -103,6 +103,23 @@
   }
   .btn-primary:hover { background: var(--apm-primary-hover); }
   .btn-primary:active { transform: scale(0.98); }
+  .btn-primary:disabled, .btn-primary[aria-disabled="true"] { opacity: .5; cursor: not-allowed; transform: none; }
+  .btn-secundario {
+    display: inline-flex; align-items: center; gap: 8px;
+    padding: 10px 18px; border-radius: 12px; font-size: 14px; font-weight: 700;
+    border: 1px solid var(--apm-border); color: var(--apm-text); background: transparent; text-decoration: none;
+  }
+  .btn-secundario[aria-pressed="true"] { border-color: var(--apm-primary); color: var(--apm-primary); background: var(--apm-primary-soft); }
+  .btn-secundario[aria-disabled="true"] { opacity: .55; cursor: not-allowed; }
+
+  /* ---------- Materiais do módulo (Apostila / Prova) ---------- */
+  .apm-material-campo { display: flex; align-items: center; gap: 10px; padding: 8px 14px; border: 1px solid var(--apm-border); border-radius: 12px; }
+  .apm-material-campo:focus-within { box-shadow: 0 0 0 2px var(--apm-primary-soft-border); }
+  .apm-material-campo input { flex: 1; min-width: 0; border: 0; outline: 0; background: transparent; font-size: 14px; color: var(--apm-text); padding: 4px 0; }
+  .apm-material-aluno { display: flex; align-items: center; gap: 10px; min-height: 40px; font-size: 13px; }
+  .apm-material-status { font-size: 13px; font-weight: 600; min-height: 20px; }
+  .apm-material-status.erro { color: #b91c1c; }
+  .apm-material-status.sucesso { color: #047857; }
 
   .badge {
     display: inline-block; font-size: 11px; font-weight: 700; padding: 3px 9px;
@@ -598,6 +615,38 @@ const CONFIG = {
     { id: 'graduacao', secao: 'instrutoria', titulo: 'Graduação', descricao: 'Conteúdo da graduação, conduzida pela Coordenação.', icone: 'fa-user-graduate', link: '', cargos: ['Coordenador'], ativo: true },
   ],
 
+  // Apostila e Prova de cada módulo (botões na página do módulo).
+  // - apostila: mensagem enviada ao aluno pelo System (POST /mensagens).
+  //   corpo aceita HTML simples (<b>, <br>, <a>) e os marcadores
+  //   {nick} (aluno), {instrutor} (quem envia), {modulo} (título) e {data} (hoje).
+  // - prova: link da prova (abre em nova aba). Vazio = "Em breve".
+  materiais: {
+    'cfo-modulo-1': {
+      apostila: { assunto: 'Apostila — {modulo}', corpo: 'Olá, <b>{nick}</b>!<br><br>Segue a apostila do <b>{modulo}</b>.<br>[PREENCHER: conteúdo/link da apostila]<br><br>Enviado por {instrutor} em {data}.' },
+      prova: '',
+    },
+    'cfo-modulo-2': {
+      apostila: { assunto: 'Apostila — {modulo}', corpo: 'Olá, <b>{nick}</b>!<br><br>Segue a apostila do <b>{modulo}</b>.<br>[PREENCHER: conteúdo/link da apostila]<br><br>Enviado por {instrutor} em {data}.' },
+      prova: '',
+    },
+    'cfo-modulo-3': {
+      apostila: { assunto: 'Apostila — {modulo}', corpo: 'Olá, <b>{nick}</b>!<br><br>Segue a apostila do <b>{modulo}</b>.<br>[PREENCHER: conteúdo/link da apostila]<br><br>Enviado por {instrutor} em {data}.' },
+      prova: '',
+    },
+    'especializacao-basica': {
+      apostila: { assunto: 'Apostila — {modulo}', corpo: 'Olá, <b>{nick}</b>!<br><br>Segue a apostila da <b>{modulo}</b>.<br>[PREENCHER: conteúdo/link da apostila]<br><br>Enviado por {instrutor} em {data}.' },
+      prova: '',
+    },
+    'especializacao-intermediaria': {
+      apostila: { assunto: 'Apostila — {modulo}', corpo: 'Olá, <b>{nick}</b>!<br><br>Segue a apostila da <b>{modulo}</b>.<br>[PREENCHER: conteúdo/link da apostila]<br><br>Enviado por {instrutor} em {data}.' },
+      prova: '',
+    },
+    'especializacao-avancada': {
+      apostila: { assunto: 'Apostila — {modulo}', corpo: 'Olá, <b>{nick}</b>!<br><br>Segue a apostila da <b>{modulo}</b>.<br>[PREENCHER: conteúdo/link da apostila]<br><br>Enviado por {instrutor} em {data}.' },
+      prova: '',
+    },
+  },
+
   // Ordem dos cargos no Mural (depois vêm os demais cargos, em ordem alfabética).
   ordemMural: ['Comandante', 'Subcomandante', 'Coordenador', 'Instrutor'],
 
@@ -682,7 +731,17 @@ function criarMockDev() {
   const resposta = (dados, status = 200) => Promise.resolve({ ok: status < 400, status, json: () => Promise.resolve(dados) });
   return {
     auth: { estaLogado: () => true },
-    apiFetch: (caminho) => caminho === '/usuarios/me' ? resposta(usuario) : resposta({ erro: 'mock' }, 404),
+    apiFetch: (caminho) => {
+      if (caminho === '/usuarios/me') return resposta(usuario);
+      // Busca de usuários: todos os nicks do mock que contêm o termo.
+      const busca = caminho.match(/^\/usuarios\?busca=(.*)$/);
+      if (busca) {
+        const termo = decodeURIComponent(busca[1]).toLowerCase();
+        return resposta(membros.map((m, i) => ({ id: 1000 + i, nick: m.nick, figure: DEV_FIGURES[i % DEV_FIGURES.length] }))
+          .filter(u => u.nick.toLowerCase().includes(termo)));
+      }
+      return resposta({ erro: 'mock' }, 404);
+    },
     apiSystem: (caminho) => {
       if (caminho === `grupos/${GRUPO_APM}/membros`) return Promise.resolve({ membros: membros.slice() });
       if (caminho.startsWith('usuarios/')) {
@@ -820,7 +879,7 @@ function avatarCropHtml(nick, { modo = 'cabeca', largura = 32, raio = 8, padding
 let MOCK = null; // preenchido só no modo de teste
 
 const obterAuth = () => MOCK ? MOCK.auth : Auth;           // eslint-disable-line no-undef
-const chamarApiFetch = (c) => MOCK ? MOCK.apiFetch(c) : apiFetch(c); // eslint-disable-line no-undef
+const chamarApiFetch = (c, opcoes) => MOCK ? MOCK.apiFetch(c, opcoes) : apiFetch(c, opcoes); // eslint-disable-line no-undef
 
 // API_BASE vem de /assets/api.js (não redeclarar aqui). É lido só na hora
 // da chamada, depois que o api.js já foi carregado.
@@ -876,6 +935,9 @@ let erroSistema = false;
 let dadosCarregados = false;
 
 const MODULOS = CONFIG.modulos.filter(m => m.ativo !== false && m.id);
+const materiaisDo = (modulo) => (CONFIG.materiais || {})[modulo.id] || null;
+// Módulo abre se tiver página (link) ou Apostila/Prova configuradas.
+const moduloTemConteudo = (modulo) => !!linkSeguro(modulo.link) || !!materiaisDo(modulo);
 
 /* ---------- Patentes ("X ou superior") ---------- */
 
@@ -1080,7 +1142,7 @@ function router() {
       renderNav('/academy');
       return renderAcademy();
     }
-    if (!linkSeguro(modulo.link)) {
+    if (!moduloTemConteudo(modulo)) {
       mostrarToast('Este módulo ainda não tem conteúdo publicado.', 'info');
       history.replaceState(null, '', location.pathname + location.search + '#/academy');
       renderNav('/academy');
@@ -1240,7 +1302,7 @@ function renderAcademy() {
         <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
           ${modulos.map(m => {
             const bloqueado = moduloBloqueado(m);
-            const semLink = !linkSeguro(m.link);
+            const semLink = !moduloTemConteudo(m);
             const insignia = dataUriImagem(m.insignia);
             return `
               <div class="glass-card p-5 apm-card-click ${bloqueado ? 'locked' : ''}" data-modulo-id="${escapeHtml(m.id)}" tabindex="0" role="button"
@@ -1276,7 +1338,7 @@ function abrirModulo(id) {
   const modulo = MODULOS.find(m => m.id === id);
   if (!modulo) return;
   if (moduloBloqueado(modulo)) return mostrarToast(mensagemBloqueioModulo(modulo), 'error');
-  if (!linkSeguro(modulo.link)) return mostrarToast('Este módulo ainda não tem conteúdo publicado.', 'info');
+  if (!moduloTemConteudo(modulo)) return mostrarToast('Este módulo ainda não tem conteúdo publicado.', 'info');
   location.hash = '/academy/' + encodeURIComponent(modulo.id);
 }
 
@@ -1287,7 +1349,9 @@ function urlComNick(link) {
 
 function renderModulo(modulo) {
   const app = document.getElementById('apm-app');
-  const url = urlComNick(linkSeguro(modulo.link));
+  const link = linkSeguro(modulo.link);
+  const url = link ? urlComNick(link) : '';
+  const materiais = materiaisDo(modulo);
   app.innerHTML = `
     <div class="flex items-center justify-between flex-wrap gap-3 mb-4">
       <div class="flex items-center gap-3">
@@ -1299,13 +1363,178 @@ function renderModulo(modulo) {
           <p class="text-xs text-subtle">E-Academy · APM</p>
         </div>
       </div>
-      <a href="${escapeHtml(url)}" target="_blank" rel="noopener" class="text-xs font-semibold text-muted flex items-center gap-1.5">
+      ${url ? `<a href="${escapeHtml(url)}" target="_blank" rel="noopener" class="text-xs font-semibold text-muted flex items-center gap-1.5">
         Abrir em nova guia <i class="fa-solid fa-arrow-up-right-from-square"></i>
-      </a>
+      </a>` : ''}
     </div>
-    <iframe id="apm-iframe-modulo" src="${escapeHtml(url)}"
+    ${materiais ? htmlMateriais(materiais) : ''}
+    ${url ? `<iframe id="apm-iframe-modulo" src="${escapeHtml(url)}"
       style="width:100%;min-height:1400px;border:0;background:transparent;display:block;"
-      title="${escapeHtml(modulo.titulo)}" allow="fullscreen; clipboard-write" loading="lazy"></iframe>`;
+      title="${escapeHtml(modulo.titulo)}" allow="fullscreen; clipboard-write" loading="lazy"></iframe>` : ''}`;
+  if (materiais) ligarMateriais(modulo, materiais);
+}
+
+/* ---------- Apostila e Prova ---------- */
+
+function htmlMateriais(materiais) {
+  const prova = linkSeguro(materiais.prova);
+  return `
+    <div class="glass-card p-5 mb-4" id="apm-materiais">
+      <div class="flex flex-wrap gap-3">
+        ${materiais.apostila ? `<button type="button" class="btn-secundario" id="apm-btn-apostila" aria-pressed="false" aria-controls="apm-apostila">
+          <i class="fa-solid fa-book-open"></i> Apostila</button>` : ''}
+        ${prova
+          ? `<a href="${escapeHtml(prova)}" target="_blank" rel="noopener" class="btn-secundario" id="apm-btn-prova">
+              <i class="fa-solid fa-file-pen"></i> Prova <i class="fa-solid fa-arrow-up-right-from-square text-xs"></i></a>`
+          : `<span class="btn-secundario" id="apm-btn-prova" aria-disabled="true">
+              <i class="fa-solid fa-file-pen"></i> Prova <span class="badge badge-gold">Em breve</span></span>`}
+      </div>
+      ${materiais.apostila ? `
+      <div id="apm-apostila" class="mt-4" hidden>
+        <label for="apm-apostila-nick" class="text-xs font-semibold text-muted block mb-1.5">Nick do aluno</label>
+        <div class="flex flex-col sm:flex-row gap-3">
+          <div class="apm-material-campo flex-1">
+            <i class="fa-solid fa-user text-subtle"></i>
+            <input id="apm-apostila-nick" type="text" autocomplete="off" spellcheck="false" placeholder="Digite o nick exato">
+          </div>
+          <button type="button" class="btn-primary justify-center" id="apm-apostila-enviar" disabled>
+            <i class="fa-solid fa-paper-plane"></i> Enviar apostila</button>
+        </div>
+        <div class="apm-material-aluno mt-2" id="apm-apostila-aluno" aria-live="polite"></div>
+        <p class="apm-material-status" id="apm-apostila-status" role="status"></p>
+      </div>` : ''}
+    </div>`;
+}
+
+// Lista de usuários da resposta de /usuarios?busca= (aceita array ou objeto com a lista).
+function listaUsuarios(dados) {
+  if (Array.isArray(dados)) return dados;
+  for (const chave of ['usuarios', 'dados', 'data', 'resultados', 'items']) {
+    if (Array.isArray(dados?.[chave])) return dados[chave];
+  }
+  return [];
+}
+
+// Mensagem de erro exata que a API devolveu.
+async function erroDaApi(resp) {
+  let dados = null;
+  try { dados = await resp.json(); } catch (e) { /* sem JSON */ }
+  const msg = dados && (dados.erro || dados.error || dados.mensagem || dados.message);
+  return msg ? String(msg) : `Erro ${resp.status}`;
+}
+
+const dataHoje = () => new Date().toLocaleDateString('pt-BR');
+
+// Troca {nick}, {instrutor}, {modulo} e {data}. No corpo (HTML) os valores são escapados.
+function preencherApostila(texto, valores, html) {
+  return String(texto || '').replace(/\{(nick|instrutor|modulo|data)\}/g, (_, k) => html ? escapeHtml(valores[k]) : valores[k]);
+}
+
+function ligarMateriais(modulo, materiais) {
+  const btnApostila = document.getElementById('apm-btn-apostila');
+  document.getElementById('apm-btn-prova')?.addEventListener('click', (e) => {
+    if (e.currentTarget.getAttribute('aria-disabled') === 'true') mostrarToast('A prova deste módulo estará disponível em breve.', 'info');
+  });
+  if (!btnApostila) return;
+
+  const painel = document.getElementById('apm-apostila');
+  const input = document.getElementById('apm-apostila-nick');
+  const btnEnviar = document.getElementById('apm-apostila-enviar');
+  const alunoEl = document.getElementById('apm-apostila-aluno');
+  const statusEl = document.getElementById('apm-apostila-status');
+
+  let aluno = null;      // { id, nick } encontrado com o nick exato
+  let timer = null;
+  let buscaAtual = 0;    // descarta respostas de buscas antigas
+  let enviando = false;
+
+  const status = (msg, tipo = '') => { statusEl.textContent = msg; statusEl.className = `apm-material-status ${tipo}`; };
+  const atualizarBotao = () => { btnEnviar.disabled = !aluno || enviando; };
+
+  btnApostila.addEventListener('click', () => {
+    if (moduloBloqueado(modulo)) return mostrarToast(mensagemBloqueioModulo(modulo), 'error');
+    painel.hidden = !painel.hidden;
+    btnApostila.setAttribute('aria-pressed', String(!painel.hidden));
+    if (!painel.hidden) input.focus();
+  });
+
+  input.addEventListener('input', () => {
+    clearTimeout(timer);
+    buscaAtual++;          // resposta de busca anterior não vale mais
+    aluno = null;
+    atualizarBotao();
+    status('');
+    const termo = input.value.trim();
+    if (!termo) { alunoEl.innerHTML = ''; return; }
+    alunoEl.innerHTML = '<span class="text-subtle"><i class="fa-solid fa-spinner fa-spin mr-1"></i>Buscando…</span>';
+    timer = setTimeout(() => buscarAluno(termo), 300);
+  });
+
+  async function buscarAluno(termo) {
+    const id = ++buscaAtual;
+    let usuarios;
+    try {
+      const resp = await chamarApiFetch('/usuarios?busca=' + encodeURIComponent(termo));
+      if (!resp.ok) throw new Error(await erroDaApi(resp));
+      usuarios = listaUsuarios(await resp.json());
+    } catch (err) {
+      if (id !== buscaAtual) return;
+      alunoEl.innerHTML = `<span class="apm-material-status erro">Erro na busca: ${escapeHtml(err.message)}</span>`;
+      return;
+    }
+    if (id !== buscaAtual) return;
+    const achado = usuarios.find(u => u && u.nick && String(u.nick).toLowerCase() === termo.toLowerCase());
+    if (!achado || achado.id === undefined || achado.id === null) {
+      alunoEl.innerHTML = '<span class="apm-material-status erro"><i class="fa-solid fa-circle-xmark mr-1"></i>Nick não encontrado</span>';
+      return;
+    }
+    aluno = { id: achado.id, nick: String(achado.nick) };
+    if (achado.figure) figureCache.set(aluno.nick.toLowerCase(), Promise.resolve(achado.figure));
+    alunoEl.innerHTML = `${avatarCropHtml(aluno.nick, { largura: 32 })}
+      <span class="font-bold" id="apm-apostila-nick-achado">${escapeHtml(aluno.nick)}</span>
+      <i class="fa-solid fa-circle-check text-emerald-600"></i>`;
+    resolverAvatares(alunoEl);
+    atualizarBotao();
+  }
+
+  btnEnviar.addEventListener('click', async () => {
+    if (enviando || !aluno) return;
+    if (moduloBloqueado(modulo)) return mostrarToast(mensagemBloqueioModulo(modulo), 'error');
+    enviando = true;
+    atualizarBotao();
+    const destino = aluno;
+    const valores = { nick: destino.nick, instrutor: nickLogado, modulo: modulo.titulo, data: dataHoje() };
+    const mensagem = {
+      assunto: preencherApostila(materiais.apostila.assunto, valores, false),
+      corpo: preencherApostila(materiais.apostila.corpo, valores, true),
+      destinatarios: [destino.id],
+    };
+    status('Enviando…');
+    try {
+      if (MOCK) {
+        // ?dev=1: nada é enviado de verdade.
+        console.log('[APM] envio simulado: POST /mensagens', mensagem);
+        await new Promise(r => setTimeout(r, 200));
+        status(`Envio simulado: apostila para ${destino.nick} (nada foi enviado)`, 'sucesso');
+        mostrarToast('Envio simulado (modo de teste)', 'info');
+      } else {
+        const resp = await chamarApiFetch('/mensagens', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(mensagem),
+        });
+        if (!resp.ok) throw new Error(await erroDaApi(resp));
+        status(`Apostila enviada para ${destino.nick}`, 'sucesso');
+        mostrarToast(`Apostila enviada para ${destino.nick}`, 'success');
+      }
+    } catch (err) {
+      status(err.message || String(err), 'erro');
+      mostrarToast(err.message || String(err), 'error');
+    } finally {
+      enviando = false;
+      atualizarBotao();
+    }
+  });
 }
 
 // Mesmo protocolo do INS.html: a página do módulo pode avisar sua altura.

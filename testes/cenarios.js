@@ -214,6 +214,129 @@ const TODOS = [...CFO, ...AFO, 'teste-admissao', 'graduacao'];
     }
   }
 
+  // ---------- Apostila e Prova ----------
+  const digitar = async (w, d, texto, espera = 400) => {
+    const input = d.getElementById('apm-apostila-nick');
+    input.value = texto; input.dispatchEvent(new w.Event('input'));
+    await esperar(espera);
+  };
+  const achado = (d) => d.getElementById('apm-apostila-nick-achado')?.textContent || '';
+  const textoAluno = (d) => d.getElementById('apm-apostila-aluno').textContent;
+  const btnEnviar = (d) => d.getElementById('apm-apostila-enviar');
+
+  console.log('• Apostila e Prova (?dev=1, envio simulado)');
+  {
+    const { w, d, erros } = await abrir('?dev=1');
+    const logs = [];
+    w.console.log = (...a) => logs.push(a);
+    await ir(w, '/academy');
+    d.querySelector('[data-modulo-id="cfo-modulo-1"]').click();
+    await esperar(40);
+    ok(w.location.hash === '#/academy/cfo-modulo-1', 'card do CFO Módulo I abre a página do módulo mesmo sem link: ' + w.location.hash);
+    for (const id of [...CFO, ...AFO]) {
+      await ir(w, '/academy/' + id);
+      ok(d.getElementById('apm-btn-apostila') && d.getElementById('apm-btn-prova'), `${id} com botões Apostila e Prova`);
+      const prova = d.getElementById('apm-btn-prova');
+      ok(prova && prova.getAttribute('aria-disabled') === 'true' && /Em breve/.test(prova.textContent), `${id}: Prova sem link mostra "Em breve"`);
+    }
+    await ir(w, '/academy/teste-admissao');
+    ok(!d.getElementById('apm-materiais'), 'módulo sem materiais/link não abre página');
+    toast(d);
+
+    await ir(w, '/academy/cfo-modulo-2');
+    d.getElementById('apm-btn-apostila').click();
+    ok(!d.getElementById('apm-apostila').hidden, 'Apostila abre o campo "Nick do aluno"');
+    ok(btnEnviar(d).disabled, 'Enviar começa desativado');
+
+    // debounce: antes de 300ms ainda não buscou
+    await digitar(w, d, 'aluno.um', 150);
+    ok(!achado(d) && btnEnviar(d).disabled, 'debounce: não busca antes de 300ms');
+    await esperar(250);
+    ok(achado(d) === 'Aluno.Um', 'nick exato (sem diferenciar maiúsculas) mostra o nick do System: ' + achado(d));
+    ok(!btnEnviar(d).disabled, 'nick exato libera o botão');
+    const img = d.querySelector('#apm-apostila-aluno img[data-avatar-nick]');
+    ok(img && /avatarimage\?figure=/.test(img.src), 'mostra o avatar do aluno');
+
+    await digitar(w, d, 'Aluno');
+    ok(/Nick não encontrado/.test(textoAluno(d)) && btnEnviar(d).disabled, 'busca parcial ("Aluno") não libera o envio');
+    await digitar(w, d, 'NinguemComEsseNick');
+    ok(/Nick não encontrado/.test(textoAluno(d)) && btnEnviar(d).disabled, 'nick inexistente: "Nick não encontrado" e botão desativado');
+
+    // nick com HTML: aparece como texto e é escapado no corpo
+    await digitar(w, d, '<b>teste&"aspas"</b>');
+    ok(achado(d) === '<b>Teste&"aspas"</b>' && !d.querySelector('#apm-apostila-aluno b'), 'nick com HTML aparece como texto');
+
+    await digitar(w, d, 'Aluno.Um');
+    const b = btnEnviar(d);
+    b.click(); b.click(); b.click();
+    ok(b.disabled, 'botão desativa durante o envio');
+    await esperar(300);
+    const envios = logs.filter(a => /envio simulado/.test(a[0]));
+    ok(envios.length === 1, `clique duplo envia só uma vez (veio ${envios.length})`);
+    const msg = envios[0] && envios[0][1];
+    ok(msg && msg.destinatarios.length === 1 && msg.destinatarios[0] === 1007, 'destinatarios: [id do aluno]: ' + JSON.stringify(msg && msg.destinatarios));
+    ok(msg && msg.assunto === 'Apostila — CFO Módulo II', 'assunto com {modulo}: ' + (msg && msg.assunto));
+    ok(msg && /Olá, <b>Aluno\.Um<\/b>/.test(msg.corpo) && /Enviado por Lider em \d{2}\/\d{2}\/\d{4}/.test(msg.corpo) && !/\{(nick|instrutor|modulo|data)\}/.test(msg.corpo), 'corpo com marcadores trocados: ' + (msg && msg.corpo));
+    ok(/Envio simulado/.test(d.getElementById('apm-apostila-status').textContent) && /simulado/i.test(toast(d)), 'aviso de envio simulado');
+    ok(!b.disabled, 'botão volta depois da resposta');
+    ok(erros.length === 0, 'erros de JS: ' + erros.join(' | '));
+  }
+
+  console.log('• Apostila: módulo bloqueado (Aluno Cabo)');
+  {
+    const { w, d } = await abrir('?dev=1&cargo=Aluno&patente=Cabo');
+    for (const id of AFO) {
+      await ir(w, '/academy/' + id);
+      ok(!d.getElementById('apm-btn-apostila') && !d.getElementById('apm-btn-prova') && w.location.hash === '#/academy', `${id} trancado: sem Apostila/Prova`);
+      toast(d);
+    }
+    await ir(w, '/academy/cfo-modulo-1');
+    ok(!!d.getElementById('apm-btn-apostila'), 'CFO liberado para o Cabo: botões aparecem');
+  }
+
+  console.log('• Apostila: envio real (apiFetch simulado, sem ?dev=1)');
+  {
+    const stub = `<script>
+      window.chamadas = []; console.info = () => {};
+      const r = (d, s = 200) => Promise.resolve({ ok: s < 400, status: s, json: () => Promise.resolve(d) });
+      window.Auth = { estaLogado: () => true };
+      window.apiFetch = (c, o) => {
+        window.chamadas.push([c, o]);
+        if (c === '/usuarios/me') return r({ nick: 'Lider', patente_nome: 'Superintendente', status: 'ativo', administrador_sistema: 0 });
+        if (c.startsWith('/usuarios?busca=')) return r({ usuarios: [{ id: 42, nick: 'Aluno.Um' }, { id: 43, nick: 'Aluno.Umberto' }] });
+        if (c === '/mensagens') return new Promise(res => setTimeout(() => res(window.falhar
+          ? { ok: false, status: 400, json: () => Promise.resolve({ erro: 'Destinatário não aceita mensagens' }) }
+          : { ok: true, status: 201, json: () => Promise.resolve({ id: 1 }) }), 100));
+        return r({}, 404);
+      };
+      window.fetch = (u) => /grupos\\/APM\\/membros/.test(u)
+        ? r({ membros: [{ nick: 'Lider', cargo: 'Comandante' }] })
+        : /usuarios\\//.test(u) ? r({ nick: 'Lider', grupos: [] }) : Promise.reject(new Error('sem rede'));
+    </script>`;
+    const dom = new JSDOM(stub + html, { url: 'http://127.0.0.1:8765/apm.html', runScripts: 'dangerously', pretendToBeVisual: true });
+    const w = dom.window, d = w.document;
+    w.scrollTo = () => {};
+    await esperar(150);
+    await ir(w, '/academy/cfo-modulo-1');
+    d.getElementById('apm-btn-apostila').click();
+    await digitar(w, d, 'ALUNO.UM');
+    ok(achado(d) === 'Aluno.Um', 'acha o nick exato entre resultados parecidos');
+    const b = btnEnviar(d);
+    b.click(); b.click();
+    await esperar(200);
+    const posts = w.chamadas.filter(([c]) => c === '/mensagens');
+    ok(posts.length === 1, `clique duplo: um POST só (veio ${posts.length})`);
+    const [, o] = posts[0] || [];
+    ok(o && o.method === 'POST' && o.headers['Content-Type'] === 'application/json', 'POST com Content-Type JSON');
+    const corpo = o && JSON.parse(o.body);
+    ok(corpo && corpo.assunto && corpo.corpo && JSON.stringify(corpo.destinatarios) === '[42]', 'body: { assunto, corpo, destinatarios: [42] }');
+    ok(d.getElementById('apm-apostila-status').textContent === 'Apostila enviada para Aluno.Um', 'mensagem de sucesso: ' + d.getElementById('apm-apostila-status').textContent);
+    w.falhar = true;
+    b.click();
+    await esperar(200);
+    ok(d.getElementById('apm-apostila-status').textContent === 'Destinatário não aceita mensagens', 'mostra o erro exato da API: ' + d.getElementById('apm-apostila-status').textContent);
+  }
+
   console.log('• Produção com ?dev=1 (modo de teste NÃO pode ligar)');
   {
     const { d } = await abrir('?dev=1', 'https://system.policiacia.com/p/apm');
