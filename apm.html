@@ -1,0 +1,1219 @@
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>APM - Academia de Polícia Militar (System)</title>
+<script src="https://cdn.tailwindcss.com/3.4.17"></script>
+<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&amp;display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+<style>
+  /* ============ PALETA (troque aqui para mudar as cores do site inteiro) ============ */
+  :root {
+    --apm-primary: #7a1c2c;        /* vermelho vinho */
+    --apm-primary-hover: #5f1522;
+    --apm-primary-dark: #3d0d16;
+    --apm-primary-light: #9b2a3c;
+    --apm-primary-soft: #fbeff1;   /* fundo claro (badges, item ativo) */
+    --apm-primary-soft-border: #f3d3d9;
+    --apm-accent: #c9a24a;         /* dourado (detalhes) */
+    --apm-bg: #f6f4f4;
+    --apm-card: #ffffff;
+    --apm-text: #1f1416;
+    --apm-muted: #6b6264;
+    --apm-subtle: #a19a9b;
+    --apm-border: #ece7e8;
+    --apm-hover: #f5f0f1;
+  }
+
+  #apm-root *, #apm-bloqueio *, #apm-toast, #apm-dev-badge { font-family: 'Plus Jakarta Sans', sans-serif; }
+  body { background: var(--apm-bg); color: var(--apm-text); }
+
+  .glass-card {
+    background: var(--apm-card);
+    border-radius: 20px;
+    box-shadow: 0 4px 24px rgba(61,13,22,0.06);
+    border: 1px solid rgba(61,13,22,0.05);
+  }
+
+  /* ---------- Sidebar ---------- */
+  #apm-sidebar {
+    width: 260px;
+    position: sticky;
+    top: 16px;
+    align-self: flex-start;
+    max-height: calc(100vh - 32px);
+    overflow-y: auto;
+    z-index: 70;
+    transition: transform .25s ease;
+  }
+  #apm-mobile-topbar { display: none; }
+  #apm-sidebar-backdrop {
+    display: none; position: fixed; inset: 0;
+    background: rgba(31,20,22,0.5); z-index: 60;
+  }
+  #apm-sidebar-backdrop.open { display: block; }
+
+  @media (max-width: 900px) {
+    #apm-mobile-topbar { display: flex; }
+    #apm-sidebar { position: fixed; inset: 0 auto 0 0; height: 100vh; max-height: 100vh; width: 280px; margin: 0; border-radius: 0; transform: translateX(-100%); }
+    #apm-sidebar.open { transform: translateX(0); }
+    #apm-btn-fechar-menu { display: block !important; }
+  }
+
+  .apm-logo {
+    width: 40px; height: 40px; border-radius: 12px; flex-shrink: 0;
+    display: flex; align-items: center; justify-content: center;
+    background: linear-gradient(135deg, var(--apm-primary-light), var(--apm-primary-dark));
+    color: var(--apm-accent); font-size: 18px;
+  }
+  .apm-logo img { max-width: 100%; max-height: 100%; }
+
+  .nav-item {
+    display: flex; align-items: center; gap: 12px;
+    padding: 11px 16px; border-radius: 12px;
+    font-size: 14px; font-weight: 600; color: var(--apm-muted);
+    cursor: pointer; transition: all .15s ease; text-decoration: none;
+  }
+  .nav-item:hover { background: var(--apm-hover); color: var(--apm-text); }
+  .nav-item.active { background: var(--apm-primary); color: #fff; }
+  .nav-item:focus-visible, .apm-card-click:focus-visible, .btn-primary:focus-visible { outline: 2px solid var(--apm-accent); outline-offset: 2px; }
+  .nav-item i { width: 18px; text-align: center; }
+  .nav-item .nav-lock { margin-left: auto; font-size: 11px; color: var(--apm-subtle); width: auto; }
+  .nav-item.active .nav-lock { color: rgba(255,255,255,.7); }
+  .nav-item.locked { color: #c9c1c3; }
+
+  .nav-secao-label {
+    font-size: 10px; font-weight: 800; letter-spacing: .05em; text-transform: uppercase;
+    color: var(--apm-subtle); padding: 14px 16px 4px;
+  }
+
+  /* ---------- Botões / badges ---------- */
+  .btn-primary {
+    background: var(--apm-primary); color: #fff;
+    display: inline-flex; align-items: center; gap: 8px;
+    padding: 10px 18px; border-radius: 12px; font-size: 14px; font-weight: 700;
+    transition: background .15s ease, transform .1s ease; text-decoration: none;
+  }
+  .btn-primary:hover { background: var(--apm-primary-hover); }
+  .btn-primary:active { transform: scale(0.98); }
+
+  .badge {
+    display: inline-block; font-size: 11px; font-weight: 700; padding: 3px 9px;
+    border-radius: 999px; background: var(--apm-primary-soft); color: var(--apm-primary);
+  }
+  .badge-gold { background: #fbf4e2; color: #8a6a1f; }
+
+  .text-primary { color: var(--apm-primary); }
+  .text-muted { color: var(--apm-muted); }
+  .text-subtle { color: var(--apm-subtle); }
+  .icon-box {
+    width: 42px; height: 42px; border-radius: 12px; flex-shrink: 0;
+    display: flex; align-items: center; justify-content: center;
+    background: var(--apm-primary-soft); color: var(--apm-primary); font-size: 17px;
+  }
+
+  /* ---------- Hero ---------- */
+  .apm-hero {
+    --apm-hero-img: none;
+    /* camada vinho por cima do banner para o texto continuar legível */
+    background:
+      linear-gradient(90deg, rgba(61,13,22,.94) 0%, rgba(122,28,44,.80) 50%, rgba(122,28,44,.35) 100%),
+      var(--apm-hero-img) center / cover no-repeat,
+      linear-gradient(135deg, var(--apm-primary-dark), var(--apm-primary) 60%, var(--apm-primary-light));
+    border: none;
+  }
+  @media (max-width: 640px) {
+    .apm-hero { background:
+      linear-gradient(180deg, rgba(61,13,22,.88), rgba(122,28,44,.88)),
+      var(--apm-hero-img) center / cover no-repeat,
+      var(--apm-primary-dark); }
+  }
+
+  /* Nicks com pontuação/sem espaços (.:Persceu:., Wingeet:) quebram sem estourar o layout */
+  .apm-nick { overflow-wrap: anywhere; word-break: break-word; }
+
+  /* ---------- Linha do tempo (Histórico) ---------- */
+  .apm-timeline { position: relative; margin: 0; padding: 0 0 0 22px; list-style: none; }
+  .apm-timeline::before {
+    content: ''; position: absolute; left: 6px; top: 6px; bottom: 6px;
+    width: 2px; background: var(--apm-primary-soft-border);
+  }
+  .apm-timeline li { position: relative; padding-bottom: 18px; }
+  .apm-timeline li:last-child { padding-bottom: 0; }
+  .apm-timeline li::before {
+    content: ''; position: absolute; left: -21px; top: 4px;
+    width: 12px; height: 12px; border-radius: 999px;
+    background: var(--apm-card); border: 3px solid var(--apm-primary);
+  }
+  .apm-timeline li:last-child::before { background: var(--apm-accent); border-color: var(--apm-accent); }
+
+  /* Marcador de conteúdo pendente */
+  .apm-preencher { background: #fef3c7; color: #92400e; padding: 0 4px; border-radius: 4px; font-weight: 700; }
+  .apm-hero-soft { color: rgba(255,255,255,.75); }
+  .apm-hero-chip {
+    display: inline-flex; align-items: center; gap: 6px;
+    font-size: 12px; font-weight: 700; padding: 4px 10px; border-radius: 999px;
+    background: rgba(255,255,255,.14); color: #fff;
+  }
+  .apm-hero-chip.gold { background: rgba(201,162,74,.25); color: #f6e3b3; }
+  #apm-hero .avatar-crop { height: 145px !important; border: none !important; }
+
+  /* ---------- Avatares ---------- */
+  .avatar-crop {
+    position: relative; overflow: hidden; background: #f1ecec;
+    display: inline-block; flex-shrink: 0; vertical-align: middle;
+  }
+  .avatar-crop img { position: absolute; max-width: none; }
+
+  /* ---------- Cards clicáveis ---------- */
+  .apm-card-click { cursor: pointer; transition: all .15s ease; display: block; text-decoration: none; color: inherit; }
+  .apm-card-click:hover:not(.locked) { transform: translateY(-2px); box-shadow: 0 8px 24px rgba(61,13,22,0.12); }
+  .apm-card-click.locked { cursor: not-allowed; opacity: .55; }
+
+  /* Card da liderança: faixa vinho no topo e o boneco "saindo" por cima do card */
+  .membro-lider {
+    background: linear-gradient(180deg, var(--apm-primary-soft) 0, var(--apm-primary-soft) 96px, var(--apm-card) 96px);
+    border-top: 3px solid var(--apm-primary);
+    overflow: visible;
+  }
+  .membro-lider.cargo-0 { border-top-color: var(--apm-accent); background: linear-gradient(180deg, #fbf4e2 0, #fbf4e2 96px, var(--apm-card) 96px); }
+  .membro-lider-avatar { margin-top: -58px; filter: drop-shadow(0 6px 8px rgba(61,13,22,.18)); }
+  .membro-lider-avatar .avatar-crop { background: transparent !important; }
+
+  /* ---------- Toast ---------- */
+  .toast {
+    position: fixed; bottom: 24px; right: 24px; max-width: 360px;
+    padding: 14px 18px; border-radius: 14px; font-size: 14px; font-weight: 500;
+    box-shadow: 0 8px 24px rgba(0,0,0,0.15); opacity: 0; transform: translateY(12px);
+    transition: opacity .2s ease, transform .2s ease; pointer-events: none; z-index: 300;
+  }
+  .toast.show { opacity: 1; transform: translateY(0); }
+  .toast.success { background: #ecfdf5; color: #065f46; border: 1px solid #a7f3d0; }
+  .toast.error { background: #fef2f2; color: #991b1b; border: 1px solid #fecaca; }
+  .toast.info { background: var(--apm-primary-soft); color: var(--apm-primary); border: 1px solid var(--apm-primary-soft-border); }
+  @media (max-width: 480px) { .toast { left: 16px; right: 16px; max-width: none; } }
+
+  .skeleton {
+    background: linear-gradient(90deg, #f1eded 25%, #e8e2e3 37%, #f1eded 63%);
+    background-size: 400% 100%; animation: skeleton 1.4s ease infinite; border-radius: 8px;
+  }
+  @keyframes skeleton { 0% { background-position: 100% 50%; } 100% { background-position: 0 50%; } }
+
+  #apm-dev-badge {
+    position: fixed; left: 16px; bottom: 16px; z-index: 250;
+    background: #fbbf24; color: #3b2a00; font-size: 11px; font-weight: 800;
+    padding: 6px 10px; border-radius: 999px; box-shadow: 0 4px 12px rgba(0,0,0,.15);
+  }
+</style>
+
+<!-- ============ TELA DE BLOQUEIO (fora da APM / conta inativa / erro) ============ -->
+<div id="apm-bloqueio" class="min-h-screen flex items-center justify-center p-4" style="display:none;"></div>
+
+<div id="apm-root">
+
+  <!-- ============ TOPBAR MOBILE ============ -->
+  <div id="apm-mobile-topbar" class="items-center justify-between glass-card mx-4 mt-4 p-4">
+    <div class="flex items-center gap-3">
+      <div class="apm-logo apm-logo-slot" style="width:36px;height:36px;"><i class="fa-solid fa-shield-halved"></i></div>
+      <p class="text-sm font-extrabold">APM</p>
+    </div>
+    <button id="apm-btn-abrir-menu" class="text-muted text-xl px-2" aria-label="Abrir menu">
+      <i class="fa-solid fa-bars"></i>
+    </button>
+  </div>
+  <div id="apm-sidebar-backdrop"></div>
+
+  <div class="flex min-h-screen">
+
+    <!-- ============ SIDEBAR ============ -->
+    <aside id="apm-sidebar" class="glass-card m-4 mr-0 p-5 flex flex-col shrink-0">
+      <div class="flex items-center justify-between gap-3 mb-6 px-2">
+        <div class="flex items-center gap-3">
+          <div class="apm-logo apm-logo-slot"><i class="fa-solid fa-shield-halved"></i></div>
+          <div>
+            <p class="text-sm font-extrabold leading-tight">APM</p>
+            <p class="text-xs text-subtle">Academia de Polícia Militar</p>
+          </div>
+        </div>
+        <button id="apm-btn-fechar-menu" class="text-subtle px-1" style="display:none;" aria-label="Fechar menu">
+          <i class="fa-solid fa-xmark"></i>
+        </button>
+      </div>
+
+      <!-- Preenchido via JS (renderNav) -->
+      <nav class="flex flex-col gap-1" id="apm-nav"></nav>
+
+      <div class="mt-auto pt-4 px-2 flex flex-col gap-1">
+        <a href="/" class="nav-item">
+          <i class="fa-solid fa-right-from-bracket"></i> Voltar ao System
+        </a>
+      </div>
+    </aside>
+
+    <!-- ============ CONTEÚDO ============ -->
+    <main class="flex-1 p-4 md:p-8 w-full flex flex-col min-w-0">
+      <div id="apm-app" class="flex-1"></div>
+      <footer class="text-center text-xs text-subtle pt-10 pb-4">
+        Desenvolvido por Lider
+      </footer>
+    </main>
+
+  </div>
+</div>
+
+<div id="apm-toast" class="toast" role="status" aria-live="polite"></div>
+
+<script>
+(function () {
+'use strict';
+
+/* ============================================================
+   CONFIGURAÇÃO DA APM — edite aqui
+   ============================================================ */
+
+const GRUPO_APM = 'APM';
+
+// Cargos que acessam as áreas restritas (comparação ignora maiúsculas e acentos).
+// A ordem também define a ordem da liderança no Mural.
+const CARGOS_RESTRITOS = ['Comandante', 'Subcomandante', 'Coordenador'];
+
+const CONFIG = {
+  // URL de uma imagem/emblema para o logo (vazio = ícone de escudo)
+  logo: '',
+
+  // Banner de fundo do hero (Início)
+  banner: 'https://i.ibb.co/49S60NC/apm-banner.png',
+
+  // Ordem das patentes, da menor para a maior, usada no "X ou superior".
+  // Base: ORDEM_PATENTES (Corpo Militar) + CARGOS_EXECUTIVOS (Corpo Executivo) do INS.html.
+  // Comparação ignora maiúsculas, acentos, hífens e "1º/2º/3º".
+  ordemPatentes: [
+    'Soldado', 'Cabo', 'Sargento', 'Subtenente', 'Aluno', 'Aspirante a Oficial',
+    'Supervisor', 'Supervisor-Geral', 'Inspetor', 'Inspetor-Geral',
+    'Coordenador', 'Coordenador-Geral', 'Superintendente', 'Superintendente-Geral',
+    'VIP', 'Vice-Presidente', 'Presidente', 'Acionista Majoritário', 'Chanceler',
+  ],
+  // Patentes fora da lista acima que contam como outra patente.
+  // Igual ao INS.html: oficiais do Corpo Militar = Supervisor (Tenente ou acima).
+  // Patente que não está em nenhuma das duas listas fica sem acesso (falha fechada).
+  equivalenciaPatentes: {
+    'Tenente': 'Supervisor', 'Capitão': 'Supervisor', 'Coronel': 'Supervisor',
+    'General': 'Supervisor', 'Marechal': 'Supervisor', 'Comandante': 'Supervisor',
+    'Comandante-Geral': 'Supervisor', 'Supremacia': 'Supervisor',
+  },
+
+  // Cargos da APM que veem todos os módulos (administrador do System também vê).
+  cargosAcessoTotalAcademy: ['Comandante', 'Subcomandante'],
+
+  // Módulos da E-Academy.
+  // - patenteMinima: patente do System (patente_nome) exigida, "X ou superior".
+  // - cargos: cargos no grupo APM permitidos.
+  // - Sem nenhum dos dois = todos os membros. Com os dois = precisa cumprir ambos.
+  // - link: URL da página do módulo (abre dentro do site). Vazio = "Em breve".
+  // - ativo: false esconde o módulo sem apagar.
+  modulos: [
+    { id: 'especializacao-basica', titulo: 'Especialização Básica', descricao: 'Primeira etapa das especializações da APM.', icone: 'fa-1', link: '', patenteMinima: 'Supervisor', ativo: true },
+    { id: 'especializacao-intermediaria', titulo: 'Especialização Intermediária', descricao: 'Segunda etapa das especializações da APM.', icone: 'fa-2', link: '', patenteMinima: 'Inspetor', ativo: true },
+    { id: 'especializacao-avancada', titulo: 'Especialização Avançada', descricao: 'Última etapa das especializações da APM.', icone: 'fa-3', link: '', patenteMinima: 'VIP', ativo: true },
+    { id: 'teste-admissao', titulo: 'Teste de Admissão', descricao: 'Material do teste de admissão aplicado pelos Instrutores.', icone: 'fa-clipboard-check', link: '', cargos: ['Instrutor'], ativo: true },
+    { id: 'graduacao', titulo: 'Graduação', descricao: 'Conteúdo da graduação, conduzida pela Coordenação.', icone: 'fa-user-graduate', link: '', cargos: ['Coordenador'], ativo: true },
+  ],
+
+  // Linha do tempo da seção "Histórico" (Início).
+  // Trechos "[PREENCHER ...]" aparecem destacados no site até serem trocados.
+  historico: {
+    ano: 2026,
+    eventos: [
+      { quando: '[PREENCHER: mês]', titulo: 'Comando inicial do ex-militar -Flower', texto: '' },
+      { quando: '[PREENCHER: mês]', titulo: 'O comando passa para o Comandante Lider', texto: '' },
+      { quando: 'Setembro', titulo: 'Começa uma nova fase da APM', texto: '[PREENCHER: o que mudou nessa fase]' },
+      { quando: 'Outubro', titulo: 'Lançamento do AFO e da plataforma oficial', texto: '[PREENCHER: o que é o AFO]' },
+    ],
+  },
+
+  // Atalhos exibidos na Área do Comando (só CARGOS_RESTRITOS chegam lá).
+  linksComando: [
+    // { titulo: 'Planilha de controle', descricao: 'Controle interno da APM', icone: 'fa-table', link: 'https://...' },
+  ],
+};
+
+/* ============================================================
+   MODO DE TESTE LOCAL (?dev=1)
+   ============================================================
+   Só liga quando a página é aberta como arquivo (file://) ou em
+   localhost/127.0.0.1. Em system.policiacia.com (ou qualquer outro
+   domínio) o ?dev=1 é ignorado e o login real é usado.
+   Parâmetros extras: &nick=Fulano &cargo=Aluno &patente=Supervisor
+                      &status=inativo &admin=1 &fora=1 (fora da APM)
+   ============================================================ */
+
+const PARAMS = new URLSearchParams(location.search);
+const HOSTS_LOCAIS = ['localhost', '127.0.0.1', '[::1]', '::1'];
+const ehAmbienteLocal = location.protocol === 'file:' || HOSTS_LOCAIS.includes(location.hostname);
+const MODO_DEV = PARAMS.get('dev') === '1' && ehAmbienteLocal && !/policiacia\.com$/i.test(location.hostname);
+if (PARAMS.get('dev') === '1' && !MODO_DEV) console.warn('[APM] ?dev=1 ignorado: modo de teste só funciona em arquivo local ou localhost.');
+
+const DEV_FIGURES = [
+  'hr-115-42.hd-195-19.ch-3030-82.lg-275-1408.sh-295-62.ha-1012-110',
+  'hr-893-45.hd-180-1.ch-255-82.lg-285-82.sh-290-62',
+  'hr-515-33.hd-600-1.ch-635-70.lg-716-66-62.sh-735-68',
+  'hr-100-61.hd-190-10.ch-215-66.lg-270-82.sh-300-64.ea-1404-63',
+  'hr-831-49.hd-620-2.ch-665-71.lg-700-1408.sh-725-62',
+];
+
+function criarMockDev() {
+  const nick = PARAMS.get('nick') || 'Lider';
+  const cargo = PARAMS.get('cargo') || 'Comandante';
+  const usuario = {
+    nick,
+    patente_nome: PARAMS.get('patente') || 'Superintendente',
+    status: PARAMS.get('status') || 'ativo',
+    figure: DEV_FIGURES[0],
+    administrador_sistema: PARAMS.get('admin') === '1' ? 1 : 0,
+  };
+  const membros = [
+    // Nicks com pontuação de propósito, para testar layout e URL.
+    { nick: '.:Persceu:.', cargo: 'Subcomandante' },
+    { nick: 'Wingeet:', cargo: 'Coordenador' },
+    { nick: 'DG17.', cargo: 'Coordenador' },
+    { nick: '<b>Teste&"aspas"</b>', cargo: 'Coordenador' },
+    { nick: 'Instrutor.Um', cargo: 'Instrutor' },
+    { nick: 'Instrutor.Dois', cargo: 'Instrutor' },
+    { nick: 'Aluno.Um', cargo: 'Aluno' },
+    { nick: 'Aluno.Dois', cargo: 'Aluno' },
+    { nick: 'Aluno.Tres', cargo: 'Aluno' },
+  ];
+  if (PARAMS.get('fora') !== '1') membros.unshift({ nick, cargo });
+  membros.forEach((m, i) => figureCache.set(m.nick.toLowerCase(), Promise.resolve(DEV_FIGURES[i % DEV_FIGURES.length])));
+
+  const resposta = (dados, status = 200) => Promise.resolve({ ok: status < 400, status, json: () => Promise.resolve(dados) });
+  return {
+    auth: { estaLogado: () => true },
+    apiFetch: (caminho) => caminho === '/usuarios/me' ? resposta(usuario) : resposta({ erro: 'mock' }, 404),
+    apiSystem: (caminho) => {
+      if (caminho === `grupos/${GRUPO_APM}/membros`) return Promise.resolve({ membros: membros.slice() });
+      if (caminho.startsWith('usuarios/')) return Promise.resolve({ nick, grupos: [] });
+      return Promise.reject(new Error('mock: rota não simulada ' + caminho));
+    },
+  };
+}
+
+/* ============================================================
+   UTIL
+   ============================================================ */
+
+function escapeHtml(valor) {
+  return String(valor ?? '').replace(/[&<>"']/g, c => ({
+    '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;'
+  }[c]));
+}
+
+// Minúsculas, sem acentos e sem espaços nas pontas.
+const normalizar = (s) => String(s || '').normalize('NFD').replace(/[̀-ͯ]/g, '').trim().toLowerCase();
+const mesmoNick = (a, b) => normalizar(a) === normalizar(b);
+const cargoNaLista = (cargo, lista) => lista.some(c => normalizar(c) === normalizar(cargo));
+const linkSeguro = (url) => /^https?:\/\//i.test(String(url || '').trim()) ? String(url).trim() : '';
+
+function mostrarToast(mensagem, tipo = 'info') {
+  const toast = document.getElementById('apm-toast');
+  toast.textContent = mensagem;
+  toast.className = `toast ${tipo} show`;
+  clearTimeout(toast._timeout);
+  toast._timeout = setTimeout(() => toast.classList.remove('show'), 4000);
+}
+
+/* ============================================================
+   AVATARES (mesmo padrão do INS.html)
+   ============================================================ */
+
+// Nick como segmento de URL: encodeURIComponent não codifica "." — um nick
+// como "DG17." ou ".:Persceu:." poderia ter o ponto final cortado ou virar
+// "." / ".." no caminho, então o ponto também vira %2E.
+const nickNaUrl = (nick) => encodeURIComponent(String(nick)).replace(/\./g, '%2E');
+const HABBLET_PLAYER_API = (nick) => `https://api.habblet.city/player/${nickNaUrl(nick)}`;
+const AVATAR_PLACEHOLDER = 'data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///ywAAAAAAQABAAACAUwAOw==';
+const figureCache = new Map();
+
+const AVATAR_TAMANHOS = {
+  b: {
+    canvas: { w: 90, h: 130 },
+    box: { cabeca: { x: 28, y: 38, w: 36, h: 32 }, corpo: { x: 28, y: 38, w: 39, h: 82 }, busto: { x: 28, y: 38, w: 39, h: 52 } },
+  },
+  l: {
+    canvas: { w: 180, h: 260 },
+    // busto = da cabeça até a cintura (usado no Mural)
+    box: { cabeca: { x: 58, y: 74, w: 72, h: 67 }, corpo: { x: 58, y: 74, w: 65, h: 167 }, busto: { x: 58, y: 74, w: 65, h: 105 } },
+  },
+};
+const AVATAR_LIMITE_ESCALA_B = 1.4;
+
+let usuarioMe = null; // resposta de /usuarios/me
+
+function obterFigure(nick) {
+  const key = nick.toLowerCase();
+  if (usuarioMe && usuarioMe.figure && key === String(usuarioMe.nick).toLowerCase()) return Promise.resolve(usuarioMe.figure);
+  if (!figureCache.has(key)) {
+    const promise = fetch(HABBLET_PLAYER_API(nick))
+      .then(r => r.ok ? r.json() : null)
+      .then(d => (d && d.figure) ? d.figure : null)
+      .catch(() => null);
+    figureCache.set(key, promise);
+  }
+  return figureCache.get(key);
+}
+
+function urlAvatarPorFigure(figure, modo, tamanhoServidor) {
+  const params = new URLSearchParams({ figure, size: tamanhoServidor });
+  if (modo === 'cabeca') params.set('headonly', '1');
+  return `https://imaging.habblet.city/avatarimage?${params.toString()}`;
+}
+
+async function resolverAvatares(escopoEl) {
+  if (!escopoEl) return;
+  const imgs = Array.from(escopoEl.querySelectorAll('img[data-avatar-nick]'));
+  const nicksUnicos = [...new Set(imgs.map(img => img.dataset.avatarNick))];
+  await Promise.all(nicksUnicos.map(async (nick) => {
+    const figure = await obterFigure(nick);
+    if (!figure) return;
+    imgs.filter(img => img.dataset.avatarNick === nick).forEach(img => {
+      const modo = img.dataset.avatarModo || 'cabeca';
+      const tamanhoServidor = img.dataset.avatarTamanho || 'b';
+      img.src = urlAvatarPorFigure(figure, modo, tamanhoServidor);
+    });
+  }));
+}
+
+function avatarCropHtml(nick, { modo = 'cabeca', largura = 32, raio = 8, padding = 0, borda = false } = {}) {
+  const boxB = AVATAR_TAMANHOS.b.box[modo] || AVATAR_TAMANHOS.b.box.cabeca;
+  const precisaDeL = (largura / boxB.w) > AVATAR_LIMITE_ESCALA_B;
+  const tamanhoServidor = precisaDeL ? 'l' : 'b';
+
+  const { canvas, box } = AVATAR_TAMANHOS[tamanhoServidor];
+  const boxModo = box[modo] || box.cabeca;
+  const escala = largura / boxModo.w;
+  const alturaExibida = Math.round(boxModo.h * escala);
+
+  const larguraCaixa = largura + padding * 2;
+  const alturaCaixa = alturaExibida + padding * 2;
+  const bordaCss = borda ? 'border:1px solid var(--apm-border);' : '';
+
+  if (!nick) {
+    return `<div class="avatar-crop" style="width:${larguraCaixa}px;height:${alturaCaixa}px;border-radius:${raio}px;background:transparent;"></div>`;
+  }
+
+  const imgW = Math.round(canvas.w * escala);
+  const imgH = Math.round(canvas.h * escala);
+  const left = padding - Math.round(boxModo.x * escala);
+  const top = padding - Math.round(boxModo.y * escala);
+
+  return `
+    <div class="avatar-crop" style="width:${larguraCaixa}px;height:${alturaCaixa}px;border-radius:${raio}px;${bordaCss}background:transparent">
+      <img src="${AVATAR_PLACEHOLDER}" alt=""
+           data-avatar-nick="${escapeHtml(nick)}"
+           data-avatar-modo="${modo}"
+           data-avatar-tamanho="${tamanhoServidor}"
+           style="width:${imgW}px;height:${imgH}px;left:${left}px;top:${top}px;"
+           loading="lazy">
+    </div>`;
+}
+
+/* ============================================================
+   API DO SYSTEM
+   ============================================================ */
+
+let MOCK = null; // preenchido só no modo de teste
+
+const obterAuth = () => MOCK ? MOCK.auth : Auth;           // eslint-disable-line no-undef
+const chamarApiFetch = (c) => MOCK ? MOCK.apiFetch(c) : apiFetch(c); // eslint-disable-line no-undef
+
+// API_BASE vem de /assets/api.js (não redeclarar aqui). É lido só na hora
+// da chamada, depois que o api.js já foi carregado.
+function caminhosPublicos() {
+  const base = (typeof API_BASE !== 'undefined') ? API_BASE : ''; // eslint-disable-line no-undef
+  return [...new Set([`${base}/publico`, `${base}/api/publico`, '/api/publico'])];
+}
+let caminhoPublico = null;
+
+async function apiSystem(caminho) {
+  if (MOCK) return MOCK.apiSystem(caminho);
+  const bases = caminhoPublico ? [caminhoPublico] : caminhosPublicos();
+  let ultimoStatus = 0;
+  for (const base of bases) {
+    try {
+      const resp = await fetch(`${base}/${caminho}`);
+      ultimoStatus = resp.status;
+      if (resp.ok) {
+        caminhoPublico = base;
+        return resp.json();
+      }
+      if (resp.status !== 404) break;   // 404 = caminho errado, tenta o próximo
+    } catch (err) { /* CORS/rede: tenta o próximo */ }
+  }
+  throw new Error(`System ${caminho}: status ${ultimoStatus}`);
+}
+
+// api.js só é carregado se a página ainda não o tiver (o layout do System
+// já o inclui — carregar de novo dá "API_BASE has already been declared").
+function garantirApiJs() {
+  if (MOCK) return Promise.resolve();
+  if (typeof Auth !== 'undefined' && typeof apiFetch === 'function') return Promise.resolve(); // eslint-disable-line no-undef
+  return new Promise((resolve, reject) => {
+    const tag = document.createElement('script');
+    tag.src = '/assets/api.js';
+    tag.onload = resolve;
+    tag.onerror = () => reject(new Error('Não foi possível carregar /assets/api.js'));
+    document.head.appendChild(tag);
+  });
+}
+
+/* ============================================================
+   ESTADO GLOBAL
+   ============================================================ */
+
+let nickLogado = '';
+let patenteUsuario = '';
+let cargoAPM = '';
+let ehAdminSystem = false;
+let podeComando = false;     // CARGOS_RESTRITOS ou administrador do System
+let membrosAPM = [];
+let erroSistema = false;
+let dadosCarregados = false;
+
+const MODULOS = CONFIG.modulos.filter(m => m.ativo !== false && m.id);
+
+/* ---------- Patentes ("X ou superior") ---------- */
+
+// "1º Sargento" -> "sargento", "Vice-Presidente" -> "vice presidente"
+const chavePatente = (nome) => normalizar(nome)
+  .replace(/[°ºª]/g, '').replace(/-/g, ' ').replace(/^\d+\s*/, '').replace(/\s+/g, ' ').trim();
+
+const ORDEM_PATENTES_CHAVE = CONFIG.ordemPatentes.map(chavePatente);
+const EQUIVALENCIA_CHAVE = Object.fromEntries(
+  Object.entries(CONFIG.equivalenciaPatentes).map(([k, v]) => [chavePatente(k), chavePatente(v)]));
+
+// Posição da patente na ordem; -1 = desconhecida (sem acesso).
+function rankPatente(nome) {
+  let k = chavePatente(nome);
+  if (!k) return -1;
+  if (EQUIVALENCIA_CHAVE[k]) k = EQUIVALENCIA_CHAVE[k];
+  return ORDEM_PATENTES_CHAVE.indexOf(k);
+}
+
+function patenteAtende(minima) {
+  const alvo = rankPatente(minima);
+  const atual = rankPatente(patenteUsuario);
+  return alvo >= 0 && atual >= 0 && atual >= alvo;
+}
+
+/* ---------- Acesso aos módulos ---------- */
+
+function moduloBloqueado(modulo) {
+  if (ehAdminSystem || cargoNaLista(cargoAPM, CONFIG.cargosAcessoTotalAcademy)) return false;
+  if (modulo.patenteMinima && !patenteAtende(modulo.patenteMinima)) return true;
+  if (modulo.cargos && modulo.cargos.length && !cargoNaLista(cargoAPM, modulo.cargos)) return true;
+  return false;
+}
+
+function requisitoModulo(modulo) {
+  const partes = [];
+  if (modulo.patenteMinima) partes.push(`Patente ${modulo.patenteMinima} ou superior`);
+  if (modulo.cargos && modulo.cargos.length) partes.push(`${modulo.cargos.join(' ou ')} da APM`);
+  return partes.length ? partes.join(' + ') : 'Todos os membros';
+}
+
+const mensagemBloqueioModulo = (modulo) => `Este módulo requer: ${requisitoModulo(modulo)}.`;
+
+// Destaca os marcadores [PREENCHER ...] (recebe texto JÁ escapado).
+const destacarPreencher = (htmlEscapado) =>
+  htmlEscapado.replace(/\[PREENCHER[^\]]*\]/g, m => `<mark class="apm-preencher">${m}</mark>`);
+
+/* ============================================================
+   CARREGAMENTO INICIAL
+   Devolve null se liberado, ou o tipo de bloqueio.
+   ============================================================ */
+
+async function carregarDadosIniciais() {
+  const auth = obterAuth();
+  if (typeof auth === 'undefined' || typeof auth.estaLogado !== 'function') {
+    throw new Error('Não foi possível carregar /assets/api.js');
+  }
+  if (!auth.estaLogado()) {
+    window.location.href = '/login.html';
+    return new Promise(() => {});              // interrompe o carregamento
+  }
+  const respMe = await chamarApiFetch('/usuarios/me');
+  if (!respMe.ok) return new Promise(() => {}); // 401 sem renovação já redireciona
+  usuarioMe = await respMe.json();
+
+  nickLogado = String(usuarioMe.nick || '').trim();
+  patenteUsuario = String(usuarioMe.patente_nome || '').trim();
+  ehAdminSystem = Number(usuarioMe.administrador_sistema) === 1;
+
+  // Conta não ativa: bloqueia antes de qualquer coisa (inclusive admin).
+  // Sem o campo status, segue o mesmo critério do INS.html (considera ativo).
+  const status = normalizar(usuarioMe.status);
+  if (status && status !== 'ativo') return { tipo: 'inativo', status: usuarioMe.status };
+
+  const [publicoRes, membrosRes] = await Promise.all([
+    apiSystem(`usuarios/${encodeURIComponent(nickLogado)}`).catch(() => null),
+    apiSystem(`grupos/${GRUPO_APM}/membros`).catch(() => null),
+  ]);
+
+  erroSistema = !membrosRes;
+  membrosAPM = (Array.isArray(membrosRes) ? membrosRes : (membrosRes?.membros || []))
+    .filter(m => m && m.nick);
+
+  const membro = membrosAPM.find(m => mesmoNick(m.nick, nickLogado)) || null;
+  const grupoPublico = (publicoRes?.grupos || []).find(g => normalizar(g.codigo) === normalizar(GRUPO_APM)) || null;
+  cargoAPM = String(membro?.cargo || grupoPublico?.cargo || '').trim();
+  const ehMembro = !!membro || !!grupoPublico;
+
+  if (!ehMembro && !ehAdminSystem) {
+    return { tipo: erroSistema ? 'erro' : 'fora' };
+  }
+
+  podeComando = ehAdminSystem || cargoNaLista(cargoAPM, CARGOS_RESTRITOS);
+  console.info('[APM]', { nick: nickLogado, cargo: cargoAPM, admin: ehAdminSystem, comando: podeComando, dev: !!MOCK });
+
+  dadosCarregados = true;
+  return null;
+}
+
+/* ============================================================
+   TELAS DE BLOQUEIO
+   ============================================================ */
+
+function mostrarBloqueio({ icone, titulo, mensagem, acoes }) {
+  document.getElementById('apm-root').style.display = 'none';
+  const el = document.getElementById('apm-bloqueio');
+  el.style.display = 'flex';
+  el.innerHTML = `
+    <div class="glass-card p-8 md:p-10 max-w-md w-full text-center">
+      <div class="apm-logo mx-auto mb-5" style="width:64px;height:64px;border-radius:18px;font-size:26px;">
+        <i class="fa-solid ${icone}"></i>
+      </div>
+      <h1 class="text-xl font-extrabold mb-2">${escapeHtml(titulo)}</h1>
+      <p class="text-sm text-muted leading-relaxed mb-6">${mensagem}</p>
+      <div class="flex flex-wrap gap-2 justify-center">${acoes}</div>
+    </div>`;
+}
+
+const BTN_VOLTAR_SYSTEM = `<a href="/" class="btn-primary"><i class="fa-solid fa-arrow-left"></i> Voltar ao System</a>`;
+
+function tratarBloqueio(b) {
+  if (b.tipo === 'fora') {
+    mostrarBloqueio({
+      icone: 'fa-lock',
+      titulo: 'Acesso exclusivo para membros da APM',
+      mensagem: `Olá, <strong>${escapeHtml(nickLogado)}</strong>. Esta página é restrita aos membros da Academia de Polícia Militar. Se você acredita que deveria ter acesso, procure o Comando da APM.`,
+      acoes: BTN_VOLTAR_SYSTEM,
+    });
+  } else if (b.tipo === 'inativo') {
+    mostrarBloqueio({
+      icone: 'fa-user-slash',
+      titulo: 'Conta sem acesso',
+      mensagem: `Sua conta no System está com status <strong>${escapeHtml(b.status)}</strong>. O site da APM é liberado apenas para contas ativas.`,
+      acoes: BTN_VOLTAR_SYSTEM,
+    });
+  } else {
+    mostrarBloqueio({
+      icone: 'fa-triangle-exclamation',
+      titulo: 'Não foi possível verificar seu acesso',
+      mensagem: 'O System não respondeu ao consultar os membros da APM. Tente novamente em instantes.',
+      acoes: `<button type="button" class="btn-primary" onclick="location.reload()"><i class="fa-solid fa-rotate-right"></i> Tentar novamente</button>
+              <a href="/" class="nav-item" style="display:inline-flex;">Voltar ao System</a>`,
+    });
+  }
+}
+
+/* ============================================================
+   ROTAS
+   ============================================================ */
+
+const ROTAS = [
+  { rota: '/',          titulo: 'Início',             icone: 'fa-house',          render: renderInicio },
+  { rota: '/academy',   titulo: 'E-Academy',          icone: 'fa-graduation-cap', render: renderAcademy },
+  { rota: '/mural',     titulo: 'Mural',              icone: 'fa-users',          render: renderMural },
+  { rota: '/regimento', titulo: 'Regimento Interno',  icone: 'fa-scale-balanced', render: renderRegimento },
+  { rota: '/comando',   titulo: 'Área do Comando',    icone: 'fa-star',           render: renderComando, restrita: true },
+];
+
+const rotaLiberada = (r) => !r.restrita || podeComando;
+
+function renderNav(rotaAtual) {
+  const nav = document.getElementById('apm-nav');
+  const item = (r) => {
+    const ativo = rotaAtual === r.rota || (r.rota !== '/' && rotaAtual.startsWith(r.rota + '/'));
+    const bloqueada = !rotaLiberada(r);
+    return `
+      <a href="#${r.rota}" data-route="${r.rota}" class="nav-item ${ativo ? 'active' : ''} ${bloqueada ? 'locked' : ''}"
+         ${bloqueada ? 'title="Restrito ao Comando da APM"' : ''}>
+        <i class="fa-solid ${r.icone}"></i> ${escapeHtml(r.titulo)}
+        ${bloqueada ? '<i class="fa-solid fa-lock nav-lock"></i>' : ''}
+      </a>`;
+  };
+  nav.innerHTML =
+    ROTAS.filter(r => !r.restrita).map(item).join('') +
+    `<p class="nav-secao-label">Comando</p>` +
+    ROTAS.filter(r => r.restrita).map(item).join('');
+}
+
+function voltarAoInicio(mensagem) {
+  if (mensagem) mostrarToast(mensagem, 'error');
+  history.replaceState(null, '', location.pathname + location.search + '#/');
+  renderNav('/');
+  renderInicio();
+}
+
+function router() {
+  fecharMenuMobile();
+  if (!dadosCarregados) return; // init() chama router() de novo ao terminar
+
+  const rota = (location.hash.replace(/^#/, '') || '/').replace(/\/+$/, '') || '/';
+  window.scrollTo(0, 0);
+
+  // Módulo da E-Academy: #/academy/{id}
+  const moduloMatch = rota.match(/^\/academy\/(.+)$/);
+  if (moduloMatch) {
+    const modulo = MODULOS.find(m => m.id === decodeURIComponent(moduloMatch[1]));
+    if (!modulo) return voltarAoInicio('Módulo não encontrado.');
+    // Mesma checagem do clique: digitar a URL não pula o cadeado.
+    if (moduloBloqueado(modulo)) {
+      mostrarToast(mensagemBloqueioModulo(modulo), 'error');
+      history.replaceState(null, '', location.pathname + location.search + '#/academy');
+      renderNav('/academy');
+      return renderAcademy();
+    }
+    if (!linkSeguro(modulo.link)) {
+      mostrarToast('Este módulo ainda não tem conteúdo publicado.', 'info');
+      history.replaceState(null, '', location.pathname + location.search + '#/academy');
+      renderNav('/academy');
+      return renderAcademy();
+    }
+    renderNav(rota);
+    return renderModulo(modulo);
+  }
+
+  const def = ROTAS.find(r => r.rota === rota);
+  if (!def) return voltarAoInicio();
+  // Rota restrita: valida aqui também, não só escondendo/trancando o menu.
+  if (!rotaLiberada(def)) return voltarAoInicio('Área restrita ao Comando da APM (' + CARGOS_RESTRITOS.join(', ') + ').');
+
+  renderNav(rota);
+  def.render();
+}
+
+/* ============================================================
+   PÁGINA: INÍCIO
+   ============================================================ */
+
+function heroHtml() {
+  const hora = new Date().getHours();
+  const saudacao = hora < 5 ? 'Boa noite' : hora < 12 ? 'Bom dia' : hora < 18 ? 'Boa tarde' : 'Boa noite';
+  const cargoExibido = cargoAPM || (ehAdminSystem ? 'Administrador do System' : 'Membro');
+  const banner = linkSeguro(CONFIG.banner);
+  // URL vai dentro de url('...') no CSS: aspas e parênteses viram %xx.
+  const bannerCss = banner ? encodeURI(banner).replace(/['"()]/g, c => '%' + c.charCodeAt(0).toString(16).toUpperCase()) : '';
+  return `
+    <div class="glass-card apm-hero p-6 md:p-8 mb-6 relative overflow-hidden"
+         ${bannerCss ? `style="--apm-hero-img:url('${escapeHtml(bannerCss)}')"` : ''}>
+      <div id="apm-hero" class="relative flex items-center gap-6 flex-wrap">
+        ${avatarCropHtml(nickLogado, { modo: 'corpo', largura: 90, raio: 16, padding: 8, borda: true })}
+        <div class="flex-1 min-w-[180px]">
+          <p class="apm-hero-soft text-xs font-bold uppercase tracking-wider mb-1">CIA · Subcompanhia</p>
+          <h1 class="text-2xl md:text-4xl font-extrabold text-white leading-tight">Academia de Polícia Militar</h1>
+          <p class="text-white text-sm md:text-base font-semibold mt-3 apm-nick">${saudacao}, ${escapeHtml(nickLogado)}</p>
+          <div class="flex flex-wrap gap-2 mt-2">
+            <span class="apm-hero-chip gold"><i class="fa-solid fa-shield-halved"></i> ${escapeHtml(cargoExibido)}${cargoAPM ? ' · APM' : ''}</span>
+            ${patenteUsuario ? `<span class="apm-hero-chip"><i class="fa-solid fa-id-badge"></i> ${escapeHtml(patenteUsuario)}</span>` : ''}
+            ${ehAdminSystem ? `<span class="apm-hero-chip"><i class="fa-solid fa-gear"></i> Admin</span>` : ''}
+          </div>
+        </div>
+      </div>
+    </div>`;
+}
+
+function renderInicio() {
+  const app = document.getElementById('apm-app');
+  const atalhos = ROTAS.filter(r => r.rota !== '/');
+  const descricoes = {
+    '/academy': 'Módulos de formação e material de estudo.',
+    '/mural': 'Quem está no comando da Academia.',
+    '/regimento': 'As regras da APM.',
+    '/comando': 'Efetivo e atalhos do Comando.',
+  };
+  const hist = CONFIG.historico || { eventos: [] };
+
+  app.innerHTML = `
+    <div class="max-w-6xl mx-auto w-full">
+      ${heroHtml()}
+
+      <div class="grid grid-cols-1 lg:grid-cols-5 gap-6 mb-6">
+        <div class="glass-card p-6 md:p-8 lg:col-span-3">
+          <h2 class="text-lg font-extrabold mb-3">Sobre a APM</h2>
+          <div class="text-sm text-muted leading-relaxed flex flex-col gap-3">
+            <p>A APM é a subcompanhia da CIA voltada à formação. É por aqui que passam as especializações, o teste de admissão de instrutores e a graduação.</p>
+            <p>Neste site você vê os módulos liberados para a sua patente, sabe quem está no comando da Academia e consulta o regimento interno.</p>
+            <p>${destacarPreencher(escapeHtml('[PREENCHER: como entrar na APM e a quem procurar em caso de dúvida]'))}</p>
+          </div>
+        </div>
+
+        <div class="glass-card p-6 md:p-8 lg:col-span-2">
+          <div class="flex items-baseline justify-between mb-4">
+            <h2 class="text-lg font-extrabold">Histórico</h2>
+            <span class="badge badge-gold">${escapeHtml(hist.ano || '')}</span>
+          </div>
+          <ol class="apm-timeline">
+            ${(hist.eventos || []).map(ev => `
+              <li>
+                ${ev.quando ? `<p class="text-[11px] font-bold uppercase tracking-wide text-primary">${destacarPreencher(escapeHtml(ev.quando))}</p>` : ''}
+                <p class="text-sm font-bold">${destacarPreencher(escapeHtml(ev.titulo))}</p>
+                ${ev.texto ? `<p class="text-xs text-muted leading-relaxed mt-0.5">${destacarPreencher(escapeHtml(ev.texto))}</p>` : ''}
+              </li>`).join('')}
+          </ol>
+        </div>
+      </div>
+
+      <p class="text-sm font-bold mb-3">Acesso rápido</p>
+      <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+        ${atalhos.map(r => {
+          const bloqueada = !rotaLiberada(r);
+          return `
+            <a href="#${r.rota}" class="glass-card p-5 apm-card-click ${bloqueada ? 'locked' : ''}">
+              <div class="flex items-start justify-between mb-3">
+                <div class="icon-box"><i class="fa-solid ${r.icone}"></i></div>
+                ${bloqueada ? '<i class="fa-solid fa-lock text-subtle"></i>' : '<i class="fa-solid fa-arrow-right text-primary"></i>'}
+              </div>
+              <p class="text-sm font-bold mb-1">${escapeHtml(r.titulo)}</p>
+              <p class="text-xs text-muted leading-relaxed">${escapeHtml(descricoes[r.rota] || '')}</p>
+            </a>`;
+        }).join('')}
+      </div>
+    </div>`;
+
+  resolverAvatares(app.querySelector('#apm-hero'));
+}
+
+/* ============================================================
+   PÁGINA: E-ACADEMY
+   ============================================================ */
+
+function cabecalhoPagina(titulo, subtitulo, icone) {
+  return `
+    <div class="flex items-center gap-4 mb-6">
+      <div class="icon-box" style="width:48px;height:48px;font-size:20px;"><i class="fa-solid ${icone}"></i></div>
+      <div>
+        <h1 class="text-xl md:text-2xl font-extrabold leading-tight">${escapeHtml(titulo)}</h1>
+        <p class="text-sm text-muted">${escapeHtml(subtitulo)}</p>
+      </div>
+    </div>`;
+}
+
+function renderAcademy() {
+  const app = document.getElementById('apm-app');
+  app.innerHTML = `
+    <div class="max-w-6xl mx-auto w-full">
+      ${cabecalhoPagina('E-Academy', 'Módulos de formação da APM', 'fa-graduation-cap')}
+      ${MODULOS.length === 0 ? `
+        <div class="glass-card p-10 text-center">
+          <i class="fa-solid fa-book text-3xl text-subtle mb-3"></i>
+          <p class="text-sm text-muted">Nenhum módulo cadastrado ainda.</p>
+        </div>` : `
+        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+          ${MODULOS.map(m => {
+            const bloqueado = moduloBloqueado(m);
+            const semLink = !linkSeguro(m.link);
+            return `
+              <div class="glass-card p-5 apm-card-click ${bloqueado ? 'locked' : ''}" data-modulo-id="${escapeHtml(m.id)}" tabindex="0" role="button"
+                   aria-label="${escapeHtml(m.titulo)}${bloqueado ? ' (bloqueado)' : ''}">
+                <div class="flex items-start justify-between gap-2 mb-3">
+                  <div class="icon-box"><i class="fa-solid ${escapeHtml(m.icone || 'fa-book')}"></i></div>
+                  ${bloqueado ? '<i class="fa-solid fa-lock text-subtle"></i>'
+                    : semLink ? '<span class="badge badge-gold">Em breve</span>'
+                    : '<i class="fa-solid fa-circle-play text-primary text-lg"></i>'}
+                </div>
+                <p class="text-sm font-bold mb-1">${escapeHtml(m.titulo)}</p>
+                <p class="text-xs text-muted leading-relaxed">${escapeHtml(m.descricao)}</p>
+                <div class="mt-3">
+                  <span class="badge">${escapeHtml(requisitoModulo(m))}</span>
+                </div>
+                ${bloqueado ? `<p class="text-[11px] font-semibold text-amber-600 mt-3"><i class="fa-solid fa-triangle-exclamation mr-1"></i>Você ainda não cumpre o requisito</p>` : ''}
+              </div>`;
+          }).join('')}
+        </div>`}
+    </div>`;
+
+  app.querySelectorAll('[data-modulo-id]').forEach(card => {
+    const abrir = () => abrirModulo(card.dataset.moduloId);
+    card.addEventListener('click', abrir);
+    card.addEventListener('keydown', (e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); abrir(); } });
+  });
+}
+
+function abrirModulo(id) {
+  const modulo = MODULOS.find(m => m.id === id);
+  if (!modulo) return;
+  if (moduloBloqueado(modulo)) return mostrarToast(mensagemBloqueioModulo(modulo), 'error');
+  if (!linkSeguro(modulo.link)) return mostrarToast('Este módulo ainda não tem conteúdo publicado.', 'info');
+  location.hash = '/academy/' + encodeURIComponent(modulo.id);
+}
+
+function urlComNick(link) {
+  const separador = link.includes('?') ? '&' : '?';
+  return `${link}${separador}nick=${encodeURIComponent(nickLogado)}`;
+}
+
+function renderModulo(modulo) {
+  const app = document.getElementById('apm-app');
+  const url = urlComNick(linkSeguro(modulo.link));
+  app.innerHTML = `
+    <div class="flex items-center justify-between flex-wrap gap-3 mb-4">
+      <div class="flex items-center gap-3">
+        <a href="#/academy" class="w-9 h-9 rounded-xl border text-muted flex items-center justify-center" style="border-color:var(--apm-border);" aria-label="Voltar">
+          <i class="fa-solid fa-arrow-left"></i>
+        </a>
+        <div>
+          <p class="text-base font-bold">${escapeHtml(modulo.titulo)}</p>
+          <p class="text-xs text-subtle">E-Academy · APM</p>
+        </div>
+      </div>
+      <a href="${escapeHtml(url)}" target="_blank" rel="noopener" class="text-xs font-semibold text-muted flex items-center gap-1.5">
+        Abrir em nova guia <i class="fa-solid fa-arrow-up-right-from-square"></i>
+      </a>
+    </div>
+    <iframe id="apm-iframe-modulo" src="${escapeHtml(url)}"
+      style="width:100%;min-height:1400px;border:0;background:transparent;display:block;"
+      title="${escapeHtml(modulo.titulo)}" allow="fullscreen; clipboard-write" loading="lazy"></iframe>`;
+}
+
+// Mesmo protocolo do INS.html: a página do módulo pode avisar sua altura.
+window.addEventListener('message', (event) => {
+  if (!event.data || event.data.tipo !== 'cia-aula-altura') return;
+  const iframe = document.getElementById('apm-iframe-modulo');
+  if (!iframe || event.source !== iframe.contentWindow) return;
+  const altura = Number(event.data.altura);
+  const atual = parseFloat(iframe.style.height) || 0;
+  if (altura > 0 && Math.abs(altura + 4 - atual) > 3) {
+    iframe.style.minHeight = '';
+    iframe.style.height = (altura + 4) + 'px';
+    iframe.style.overflow = 'hidden';
+  }
+});
+
+/* ============================================================
+   PÁGINA: MURAL
+   ============================================================ */
+
+function ordemCargo(cargo) {
+  const i = CARGOS_RESTRITOS.findIndex(c => normalizar(c) === normalizar(cargo));
+  return i >= 0 ? i : CARGOS_RESTRITOS.length;
+}
+
+function renderMural() {
+  const app = document.getElementById('apm-app');
+  const lideranca = membrosAPM
+    .filter(m => cargoNaLista(m.cargo, CARGOS_RESTRITOS))
+    .sort((a, b) => (ordemCargo(a.cargo) - ordemCargo(b.cargo)) || String(a.nick).localeCompare(String(b.nick), 'pt-BR'));
+  const demais = membrosAPM
+    .filter(m => !cargoNaLista(m.cargo, CARGOS_RESTRITOS))
+    .sort((a, b) => String(a.cargo || '').localeCompare(String(b.cargo || ''), 'pt-BR') || String(a.nick).localeCompare(String(b.nick), 'pt-BR'));
+
+  app.innerHTML = `
+    <div class="max-w-6xl mx-auto w-full">
+      ${cabecalhoPagina('Mural', `${membrosAPM.length} membro${membrosAPM.length === 1 ? '' : 's'} na APM`, 'fa-users')}
+
+      ${erroSistema ? `
+        <div class="glass-card p-4 mb-6 border-l-4 border-amber-400 bg-amber-50">
+          <p class="text-sm text-amber-800"><i class="fa-solid fa-triangle-exclamation mr-1"></i>
+          Não foi possível carregar os membros do System agora. Recarregue a página.</p>
+        </div>` : ''}
+
+      <p class="text-sm font-bold mb-3">Liderança</p>
+      ${lideranca.length === 0 ? `
+        <div class="glass-card p-8 text-center mb-8"><p class="text-sm text-muted">Nenhum membro da liderança encontrado.</p></div>` : `
+        <div class="grid grid-cols-1 min-[420px]:grid-cols-2 lg:grid-cols-4 gap-x-4 gap-y-14 mb-8 pt-12">
+          ${lideranca.map(m => `
+            <div class="glass-card membro-lider cargo-${ordemCargo(m.cargo)} px-4 pb-5 flex flex-col items-center text-center">
+              <div class="membro-lider-avatar">
+                ${avatarCropHtml(m.nick, { modo: 'busto', largura: 96, raio: 0 })}
+              </div>
+              <p class="text-base font-extrabold mt-2 apm-nick w-full" title="${escapeHtml(m.nick)}">${escapeHtml(m.nick)}</p>
+              <span class="badge ${ordemCargo(m.cargo) === 0 ? 'badge-gold' : ''} mt-1">${escapeHtml(m.cargo)}</span>
+            </div>`).join('')}
+        </div>`}
+
+      ${demais.length ? `
+        <p class="text-sm font-bold mb-3">Membros</p>
+        <div class="glass-card p-2">
+          <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3">
+            ${demais.map(m => `
+              <div class="flex items-center gap-3 p-3 rounded-xl">
+                ${avatarCropHtml(m.nick, { modo: 'cabeca', largura: 36, raio: 10 })}
+                <div class="min-w-0">
+                  <p class="text-sm font-semibold truncate" title="${escapeHtml(m.nick)}">${escapeHtml(m.nick)}</p>
+                  <p class="text-xs text-subtle truncate">${escapeHtml(m.cargo || 'Membro')}</p>
+                </div>
+              </div>`).join('')}
+          </div>
+        </div>` : ''}
+    </div>`;
+
+  resolverAvatares(app);
+}
+
+/* ============================================================
+   PÁGINA: REGIMENTO INTERNO
+   ============================================================ */
+
+function renderRegimento() {
+  document.getElementById('apm-app').innerHTML = `
+    <div class="max-w-6xl mx-auto w-full">
+      ${cabecalhoPagina('Regimento Interno', 'Normas e condutas da APM', 'fa-scale-balanced')}
+      <div class="glass-card p-10 md:p-14 text-center">
+        <div class="icon-box mx-auto mb-4" style="width:60px;height:60px;font-size:24px;"><i class="fa-solid fa-hourglass-half"></i></div>
+        <h2 class="text-lg font-extrabold mb-1">Em breve</h2>
+        <p class="text-sm text-muted">O Regimento Interno da APM está sendo preparado e será publicado aqui.</p>
+      </div>
+    </div>`;
+}
+
+/* ============================================================
+   PÁGINA: ÁREA DO COMANDO (restrita)
+   ============================================================ */
+
+function renderComando() {
+  if (!podeComando) return voltarAoInicio('Área restrita ao Comando da APM.'); // defesa extra
+  const app = document.getElementById('apm-app');
+
+  const porCargo = {};
+  membrosAPM.forEach(m => { const c = m.cargo || 'Sem cargo'; porCargo[c] = (porCargo[c] || 0) + 1; });
+  const cargosOrdenados = Object.entries(porCargo)
+    .sort((a, b) => (ordemCargo(a[0]) - ordemCargo(b[0])) || b[1] - a[1]);
+  const links = (CONFIG.linksComando || []).filter(l => linkSeguro(l.link));
+
+  app.innerHTML = `
+    <div class="max-w-6xl mx-auto w-full">
+      ${cabecalhoPagina('Área do Comando', 'Visível apenas para ' + CARGOS_RESTRITOS.join(', ') + ' e administradores', 'fa-star')}
+
+      <div class="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
+        <div class="glass-card p-5">
+          <p class="text-xs text-subtle font-semibold mb-1">Total de membros</p>
+          <p class="text-2xl font-extrabold text-primary">${membrosAPM.length}</p>
+        </div>
+        ${cargosOrdenados.slice(0, 3).map(([c, n]) => `
+          <div class="glass-card p-5">
+            <p class="text-xs text-subtle font-semibold mb-1 truncate">${escapeHtml(c)}</p>
+            <p class="text-2xl font-extrabold">${n}</p>
+          </div>`).join('')}
+      </div>
+
+      <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+        <div class="glass-card p-6 lg:col-span-2">
+          <p class="text-sm font-bold mb-4">Efetivo por cargo</p>
+          ${cargosOrdenados.length === 0 ? '<p class="text-sm text-muted">Sem dados de membros.</p>' : `
+            <div class="flex flex-col gap-3">
+              ${cargosOrdenados.map(([c, n]) => {
+                const pct = membrosAPM.length ? Math.round(n / membrosAPM.length * 100) : 0;
+                return `
+                  <div>
+                    <div class="flex justify-between text-xs mb-1"><span class="font-semibold">${escapeHtml(c)}</span><span class="text-subtle">${n} · ${pct}%</span></div>
+                    <div class="h-2 rounded-full" style="background:var(--apm-hover);">
+                      <div class="h-2 rounded-full" style="width:${pct}%;background:var(--apm-primary);"></div>
+                    </div>
+                  </div>`;
+              }).join('')}
+            </div>`}
+        </div>
+
+        <div class="glass-card p-6">
+          <p class="text-sm font-bold mb-4">Atalhos do Comando</p>
+          ${links.length === 0 ? `
+            <p class="text-sm text-muted">Nenhum atalho cadastrado. Adicione em <code class="text-xs">CONFIG.linksComando</code> no topo do script.</p>` : `
+            <div class="flex flex-col gap-2">
+              ${links.map(l => `
+                <a href="${escapeHtml(linkSeguro(l.link))}" target="_blank" rel="noopener" class="nav-item" style="padding:10px 12px;">
+                  <i class="fa-solid ${escapeHtml(l.icone || 'fa-link')} text-primary"></i>
+                  <span class="min-w-0"><span class="block truncate">${escapeHtml(l.titulo)}</span>
+                  ${l.descricao ? `<span class="block text-xs font-normal text-subtle truncate">${escapeHtml(l.descricao)}</span>` : ''}</span>
+                </a>`).join('')}
+            </div>`}
+        </div>
+      </div>
+    </div>`;
+}
+
+/* ============================================================
+   MENU MOBILE
+   ============================================================ */
+
+function abrirMenuMobile() {
+  document.getElementById('apm-sidebar').classList.add('open');
+  document.getElementById('apm-sidebar-backdrop').classList.add('open');
+}
+function fecharMenuMobile() {
+  document.getElementById('apm-sidebar').classList.remove('open');
+  document.getElementById('apm-sidebar-backdrop').classList.remove('open');
+}
+
+document.getElementById('apm-btn-abrir-menu').addEventListener('click', abrirMenuMobile);
+document.getElementById('apm-btn-fechar-menu').addEventListener('click', fecharMenuMobile);
+document.getElementById('apm-sidebar-backdrop').addEventListener('click', fecharMenuMobile);
+document.getElementById('apm-sidebar').addEventListener('click', (e) => {
+  if (e.target.closest('a[data-route]')) fecharMenuMobile();
+});
+document.addEventListener('keydown', (e) => { if (e.key === 'Escape') fecharMenuMobile(); });
+
+/* ============================================================
+   INIT
+   ============================================================ */
+
+window.addEventListener('hashchange', router);
+
+function aplicarLogo() {
+  const url = linkSeguro(CONFIG.logo);
+  if (!url) return;
+  document.querySelectorAll('.apm-logo-slot').forEach(el => {
+    el.style.background = 'transparent';
+    el.innerHTML = `<img src="${escapeHtml(url)}" alt="APM">`;
+  });
+}
+
+async function iniciarAPM() {
+  aplicarLogo();
+
+  if (MODO_DEV) {
+    MOCK = criarMockDev();
+    const badge = document.createElement('div');
+    badge.id = 'apm-dev-badge';
+    badge.innerHTML = '<i class="fa-solid fa-flask"></i> MODO TESTE (usuário simulado)';
+    document.body.appendChild(badge);
+  }
+
+  const app = document.getElementById('apm-app');
+  app.innerHTML = `
+    <div class="max-w-6xl mx-auto w-full">
+      <div class="glass-card p-8 mb-6"><div class="skeleton" style="height:120px;"></div></div>
+      <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+        ${Array.from({ length: 4 }).map(() => `<div class="glass-card p-5"><div class="skeleton" style="height:90px;"></div></div>`).join('')}
+      </div>
+    </div>`;
+
+  let bloqueio = null;
+  try {
+    await garantirApiJs();
+    bloqueio = await carregarDadosIniciais();
+  } catch (err) {
+    console.error(err);
+    app.innerHTML = `<div class="glass-card p-10 text-center"><p class="text-red-600 text-sm">Falha ao carregar dados: ${escapeHtml(err.message)}</p>
+      ${ehAmbienteLocal && !MODO_DEV ? '<p class="text-xs text-muted mt-2">Testando fora do System? Abra com <code>?dev=1</code> no final do endereço.</p>' : ''}</div>`;
+    return;
+  }
+
+  if (bloqueio) return tratarBloqueio(bloqueio);
+  router();
+}
+
+// Roda já se o DOM estiver pronto (página injetada no layout do System).
+if (document.readyState === 'loading') window.addEventListener('DOMContentLoaded', iniciarAPM);
+else iniciarAPM();
+
+})();
+</script>
