@@ -21,6 +21,9 @@
     --apm-subtle: #a19a9b;
     --apm-border: #ece7e8;
     --apm-hover: #f5f0f1;
+    --apm-primary-claro: #e8a0ad;  /* vinho-claro (texto sobre fundo escuro) */
+    --apm-mural-bg-1: #2a1519;     /* cards do Mural: vinho bem escuro → grafite */
+    --apm-mural-bg-2: #151113;
   }
 
   /* Fonte do site. Os ícones do Font Awesome (<i> e classes fa-*) ficam de fora:
@@ -175,15 +178,115 @@
   .apm-card-click:hover:not(.locked) { transform: translateY(-2px); box-shadow: 0 8px 24px rgba(61,13,22,0.12); }
   .apm-card-click.locked { cursor: not-allowed; opacity: .55; }
 
-  /* Card da liderança: faixa vinho no topo e o boneco "saindo" por cima do card */
-  .membro-lider {
-    background: linear-gradient(180deg, var(--apm-primary-soft) 0, var(--apm-primary-soft) 96px, var(--apm-card) 96px);
-    border-top: 3px solid var(--apm-primary);
-    overflow: visible;
+  /* ---------- Insígnias (E-Academy) ---------- */
+  .apm-insignia-modulo { width: 48px; height: 48px; object-fit: contain; flex-shrink: 0; }
+  .apm-insignia-secao { width: 32px; height: 32px; object-fit: contain; flex-shrink: 0; }
+
+  /* ---------- Mural: cards horizontais escuros ---------- */
+  .mural-grid {
+    display: grid; grid-template-columns: minmax(0, 1fr);
+    gap: 40px 16px; padding-top: 30px;
   }
-  .membro-lider.cargo-0 { border-top-color: var(--apm-accent); background: linear-gradient(180deg, #fbf4e2 0, #fbf4e2 96px, var(--apm-card) 96px); }
-  .membro-lider-avatar { margin-top: -58px; filter: drop-shadow(0 6px 8px rgba(61,13,22,.18)); }
-  .membro-lider-avatar .avatar-crop { background: transparent !important; }
+  @media (min-width: 640px)  { .mural-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
+  @media (min-width: 1180px) { .mural-grid { grid-template-columns: repeat(3, minmax(0, 1fr)); } }
+
+  .mural-card {
+    position: relative; height: 78px; min-width: 0;
+    display: flex; align-items: center; gap: 12px;
+    padding: 0 18px 0 84px; border-radius: 16px;
+    background: linear-gradient(135deg, var(--apm-mural-bg-1), var(--apm-mural-bg-2));
+    border: 1px solid rgba(255,255,255,.06);
+    box-shadow: 0 8px 20px rgba(20,8,10,.18);
+  }
+  .mural-card.comandante { border-color: rgba(201,162,74,.45); }
+  /* boneco de corpo inteiro, com a cabeça saindo por cima do card */
+  .mural-avatar { position: absolute; left: 16px; bottom: 6px; filter: drop-shadow(0 4px 6px rgba(0,0,0,.35)); }
+  .mural-info { flex: 1; min-width: 0; text-align: center; }
+  .mural-nick {
+    color: #fff; font-weight: 800; font-size: 15px; line-height: 1.25;
+    white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+  }
+  .mural-cargo {
+    margin-top: 2px; font-size: 10.5px; font-weight: 700; letter-spacing: .12em;
+    text-transform: uppercase; color: var(--apm-primary-claro);
+    white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+  }
+  .mural-card.comandante .mural-cargo { color: var(--apm-accent); }
+  .mural-status {
+    width: 11px; height: 11px; border-radius: 999px; flex-shrink: 0;
+    background: #6b6264; box-shadow: 0 0 0 3px rgba(255,255,255,.06);
+    transition: background .2s ease, box-shadow .2s ease;
+  }
+  .mural-status.carregando { animation: apm-pulso 1.2s ease-in-out infinite; }
+  .mural-status.online { background: #22c55e; box-shadow: 0 0 0 3px rgba(34,197,94,.18), 0 0 8px rgba(34,197,94,.6); }
+  .mural-status.offline { background: #ef4444; box-shadow: 0 0 0 3px rgba(239,68,68,.15); }
+  @keyframes apm-pulso { 50% { opacity: .35; } }
+
+  /* ---------- Regimento Interno (tudo escopado em .apm-regimento) ---------- */
+  .apm-regimento .reg-layout { display: grid; grid-template-columns: minmax(0, 1fr); gap: 20px; align-items: start; }
+  @media (min-width: 1024px) { .apm-regimento .reg-layout { grid-template-columns: 250px minmax(0, 1fr); } }
+  .apm-regimento .reg-sumario { padding: 16px; }
+  @media (min-width: 1024px) { .apm-regimento .reg-sumario { position: sticky; top: 16px; max-height: calc(100vh - 32px); overflow-y: auto; } }
+  .apm-regimento .reg-sumario-titulo {
+    font-size: 10px; font-weight: 800; letter-spacing: .06em; text-transform: uppercase;
+    color: var(--apm-subtle); padding: 0 8px 8px;
+  }
+  .apm-regimento .reg-sumario-item {
+    display: flex; align-items: flex-start; gap: 10px; width: 100%; text-align: left;
+    padding: 8px; border-radius: 10px; font-size: 12.5px; font-weight: 600; color: var(--apm-muted);
+    transition: background .15s ease, color .15s ease;
+  }
+  .apm-regimento .reg-sumario-item:hover { background: var(--apm-hover); color: var(--apm-text); }
+  .apm-regimento .reg-sumario-item:focus-visible { outline: 2px solid var(--apm-accent); outline-offset: 1px; }
+  .apm-regimento .reg-sumario-item.reg-sem-resultado { opacity: .4; }
+  .apm-regimento .reg-sumario-num {
+    min-width: 30px; text-align: center; font-size: 11px; font-weight: 800; padding: 2px 6px;
+    border-radius: 6px; background: var(--apm-primary-soft); color: var(--apm-primary);
+  }
+  .apm-regimento .reg-sumario-nome { line-height: 1.35; }
+  .apm-regimento .reg-busca { display: flex; align-items: center; gap: 10px; padding: 10px 16px; margin-bottom: 16px; color: var(--apm-subtle); }
+  .apm-regimento .reg-busca input { flex: 1; min-width: 0; border: 0; outline: 0; background: transparent; font-size: 14px; color: var(--apm-text); padding: 4px 0; }
+  .apm-regimento .reg-busca:focus-within { box-shadow: 0 0 0 2px var(--apm-primary-soft-border), 0 4px 24px rgba(61,13,22,0.06); }
+  .apm-regimento .reg-contagem { font-size: 12px; font-weight: 700; color: var(--apm-primary); white-space: nowrap; }
+  .apm-regimento .reg-vazio { text-align: center; font-size: 14px; color: var(--apm-muted); padding: 32px 0; }
+  .apm-regimento .reg-texto { padding: 20px; color: var(--apm-text); font-size: 14.5px; line-height: 1.7; overflow-wrap: anywhere; }
+  @media (min-width: 768px) { .apm-regimento .reg-texto { padding: 32px 36px; } }
+  .apm-regimento .reg-texto p { margin: 0 0 7px; }
+  .apm-regimento .reg-texto strong { color: var(--apm-primary); font-weight: 700; }
+  .apm-regimento .reg-texto em { color: var(--apm-muted); }
+  /* Cabeçalho do documento */
+  .apm-regimento .reg-texto .hero {
+    background: linear-gradient(135deg, var(--apm-primary-dark), var(--apm-primary) 60%, var(--apm-primary-light));
+    color: #fff; border-radius: 16px; padding: 28px 24px; margin-bottom: 20px; text-align: center;
+  }
+  .apm-regimento .reg-texto .hero h1 { font-size: clamp(1.25rem, 2.6vw, 1.85rem); font-weight: 800; line-height: 1.25; margin: 0 0 6px; color: #fff; }
+  .apm-regimento .reg-texto .hero p { margin: 0; color: rgba(255,255,255,.78); font-size: 13px; font-weight: 600; }
+  /* Capítulos */
+  .apm-regimento .reg-texto .chapter {
+    scroll-margin-top: 16px; margin: 32px 0 4px; padding: 10px 18px; border-radius: 12px;
+    background: var(--apm-primary); color: #fff;
+  }
+  .apm-regimento .reg-texto .chapter h2 { margin: 0; font-size: 14px; font-weight: 800; letter-spacing: .08em; text-transform: uppercase; color: #fff; }
+  .apm-regimento .reg-capitulo-nome { margin: 8px 0 12px 4px !important; font-size: 12px; font-weight: 800; letter-spacing: .06em; text-transform: uppercase; color: var(--apm-primary); }
+  /* Artigos e parágrafos */
+  .apm-regimento .reg-texto .article, .apm-regimento .reg-texto .card {
+    border: 1px solid var(--apm-border); border-left: 4px solid var(--apm-primary);
+    border-radius: 12px; padding: 12px 16px; margin: 10px 0; background: var(--apm-card);
+  }
+  .apm-regimento .reg-texto .card { background: var(--apm-hover); border-left-color: var(--apm-primary-soft-border); margin-left: 12px; }
+  .apm-regimento .reg-texto .article p:last-child, .apm-regimento .reg-texto .card p:last-child { margin-bottom: 0; }
+  .apm-regimento .reg-texto .note {
+    background: var(--apm-primary-soft); border: 1px solid var(--apm-primary-soft-border); border-left: 4px solid var(--apm-primary);
+    border-radius: 12px; padding: 12px 16px; margin: 12px 0;
+  }
+  /* Tabela (Art. 7º) */
+  .apm-regimento .reg-texto table { width: 100%; border-collapse: separate; border-spacing: 0; margin: 12px 0; font-size: 13.5px; border: 1px solid var(--apm-border); border-radius: 12px; overflow: hidden; }
+  .apm-regimento .reg-texto td, .apm-regimento .reg-texto th { padding: 10px 12px; text-align: left; border-bottom: 1px solid var(--apm-border); vertical-align: top; }
+  .apm-regimento .reg-texto tr:last-child td { border-bottom: 0; }
+  .apm-regimento .reg-texto tr:first-child td { background: var(--apm-primary-soft); font-weight: 800; }
+  @media (max-width: 560px) { .apm-regimento .reg-texto table { display: block; overflow-x: auto; } }
+  .apm-regimento .reg-oculto { display: none !important; }
+  .apm-regimento mark.reg-destaque { background: #fbe7a8; color: inherit; padding: 0 2px; border-radius: 3px; }
 
   /* ---------- Toast ---------- */
   .toast {
@@ -268,6 +371,145 @@
 
 <div id="apm-toast" class="toast" role="status" aria-live="polite"></div>
 
+<!-- ============ TEXTO DO REGIMENTO INTERNO ============
+     Conteúdo de conteudo/regimento.html (com as correções aprovadas).
+     Vazio = a página do Regimento mostra "Em breve". -->
+<template id="apm-regimento-fonte">
+<div class="hero"><h1>Regimento Interno da Academia da Polícia Militar</h1><p>Central Intelligence Agency — APM/CFO</p></div>
+<section class="chapter"><h2>CAPÍTULO I</h2></section>
+<p>DISPOSIÇÕES GERAIS</p>
+<article class="article"><p> <strong>Art. 1° -</strong> A <strong>Academia de Polícia Militar (APM)</strong> é formada pela união e cooperação de todos os membros que nele estejam, sejam eles da ativa, licença ou reserva.</p></article>
+<article class="article"><p> <strong>Art. 2° -</strong> Todos os membros da Academia de Polícia Militar (APM) devem seguir normas do Regimento Interno, estando sujeito à &nbsp;punição caso não haja cumprimento da lei.</p></article>
+<article class="article"><p> <strong>Art. 3° -</strong> Constituem os objetivos fundamentais da Academia de Polícia Militar:</p></article>
+<div class="card">
+<p><strong>I.</strong> Garantir o ensino de qualidade, doutrinando e ensinando os policiais da melhor maneira possível, dando auxilio e suporte necessário aos policiais que necessitem;</p>
+<p><strong>II.</strong> Cooperação entre seus membros, por estarem sempre ativos e dispostos, a fim de garantir a excelência da academia;</p>
+<p><strong>III.</strong> Transparência na informação, por sempre estar aberta a ideias e novas sugestões, além de garantir a ciência das informações sobre a academia a seus membros.</p>
+</div>
+<article class="article"><p> <strong>Art. 4° -</strong> A Academia da Polícia Militar (APM) é a subcompanhia responsável pela organização, aplicação e acompanhamento do Curso de Formação de Oficiais (CFO), destinado à qualificação dos policiais que passam da condição de praça para oficial. Compete à APM promover a formação, o aperfeiçoamento e a avaliação dos futuros oficiais da Central Intelligence Agency, observando a Constituição Militar, o Código Penal Militar, o Código de Conduta do Oficialato e os demais documentos oficiais da instituição.</p></article>
+<div class="card">
+<p><strong>§ 1º -</strong> Todos os membros da APM deverão favoritar o grupo oficial “[CIA] Academia de PM ®” em seu perfil durante o período de vínculo com a subcompanhia.</p>
+<p><strong>§ 2º -</strong> Os membros que exercerem a função de Instrutor deverão portar obrigatoriamente o brevê vermelho, como identificação oficial da função, sempre que estiverem representando ou atuando pela APM.</p>
+<p><strong>§ 3º -</strong> Apenas oficiais poderão integrar a APM, mediante processo seletivo, indicação ou teste de admissão autorizado pela liderança competente.</p>
+<p><strong>§ 4º -</strong> O CFO será composto por três módulos: I. Módulo I — Avaliação de Conhecimentos Gerais; II. Módulo II — Carreira, Militarismo e Conduta; III. Módulo III — Comando de Base, Direitos, Código Penal Militar e Crises.</p>
+<p><strong>§ 5º -</strong> O Módulo I será aplicado diretamente no Centro de Instruções, enquanto os Módulos II e III terão seu conteúdo teórico enviado por mensagem privada, devendo o candidato realizar a respectiva avaliação no prazo máximo de 24 horas após o recebimento da aula.</p>
+<p><strong>§ 6º -</strong> A hierarquia interna da Academia da Polícia Militar será composta por: I. Comandante {Cmd.APM}; II. Subcomandante {SCmd.APM}; III. Coordenador {Coord.APM}; IV. Instrutor {APM}.</p>
+<p><strong>§ 7º -</strong> Todos os membros da APM deverão cumprir suas atribuições com disciplina, responsabilidade, imparcialidade, sigilo e respeito à hierarquia, estando sujeitos às normas da Constituição Militar, do Código Penal Militar, do Código de Conduta do Oficialato e deste Regimento Interno.</p>
+<p><strong>§ 8º -</strong> A Academia da Polícia Militar também será responsável pela organização, aplicação e acompanhamento dos Aperfeiçoamentos de Formação de Oficiais (AFO), destinados ao treinamento e desenvolvimento dos integrantes do Corpo Executivo da Central Intelligence Agency.</p>
+<p><strong>§ 9º -</strong> Os AFO serão divididos nas seguintes especializações:</p>
+<p><strong>I.</strong> <strong>AFO | Especialização Básica — Funções, Segurança e Carreira:</strong> destinada aos integrantes do Corpo Executivo a partir do cargo de Supervisor;</p>
+<p><strong>II.</strong> <strong>AFO | Especialização Intermediária — Gestão, Conduta e Desenvolvimento:</strong> destinada aos integrantes do Corpo Executivo a partir do cargo de Inspetor;</p>
+<p><strong>III.</strong> <strong>AFO | Especialização Avançada — Liderança, CPM e Gerenciamento de Crises:</strong> destinada aos integrantes do Corpo Executivo a partir do cargo de VIP.</p>
+<p><strong>§ 10º -</strong> A aplicação dos AFO deverá observar os scripts, critérios e procedimentos definidos pela liderança da APM, respeitando os documentos oficiais da CIA.</p>
+</div>
+<section class="chapter"><h2>CAPÍTULO II</h2></section>
+<p>HIERARQUIA, FUNÇÕES E METAS</p>
+<article class="article"><p> <strong>Art. 5° -</strong> A hierarquia da Academia de Polícia Militar é composta por 4 (quatro) cargos. São eles, em ordem hierárquica (do menor para o maior):</p></article>
+<div class="card">
+<p><strong>I.</strong> Instrutor {APM};</p>
+<p><strong>II.</strong> Coordenador {Coord.APM};</p>
+<p><strong>III.</strong> Subcomandante {SCmd.APM};</p>
+<p><strong>IV.</strong> Comandante {Cmd.APM}.</p>
+</div>
+<article class="article"><p> <strong>Art. 6° -</strong> Seguem as funções internas de cada cargo e seu respectivo número de vagas:</p></article>
+<div class="card">
+<p><strong>I.</strong> Os instrutores são responsáveis pela aplicação do Curso de Formação de Oficiais exclusivamente aos Aspirantes a Oficial, incluindo o envio das aulas, a aplicação das avaliações e o acompanhamento dos candidatos. Dispõe-se de 6 vagas para o cargo de instrutor;</p>
+<p><strong>II.</strong> Os coordenadores são responsáveis pelas tarefas estruturais que mantêm a função organizada. Dispõe-se de 3 vagas para o cargo de coordenador;</p>
+<p><strong>III.</strong> O subcomandante é responsável por auxiliar o comandante em suas obrigações (bem como no processo seletivo) e representá-lo em sua ausência. Dispõe-se de 1 vaga para o cargo de subcomandante;</p>
+<p><strong>IV.</strong> O comandante é responsável por conduzir a função garantindo a eficácia no processo de formação dos oficiais da Central Intelligence Agency. Dispõe-se de 1 vaga para o cargo de comandante.</p>
+<p><strong>§ 1°</strong> A meta dos instrutores é de 1 (uma) aplicação por semana, considerando que uma aplicação corresponde à aula/apostila do tema + atividade do tema.</p>
+<p><strong>§ 2°</strong> A partir do cargo de coordenador, os integrantes terão metas flexíveis definidas pelo Comando da Academia de Polícia Militar.</p>
+</div>
+<article class="article"><p> <strong>Art. 7° -</strong> Estabelece-se como padrão de gratificações pelo cumprimento ou não da meta:</p></article>
+<table>
+<tbody><tr><td><strong>Cargo</strong></td>
+<td><strong>Gratificações por meta cumprida</strong></td>
+<td><strong>Gratificações por meta não cumprida</strong></td>
+</tr>
+<tr><td>Comandante</td>
+<td>25 gratificações por mês</td>
+<td>-x-</td>
+</tr>
+<tr><td>Subcomandante</td>
+<td>20 gratificações por mês</td>
+<td>-x-</td>
+</tr>
+<tr><td>Coordenador</td>
+<td>15 gratificações por quinzena</td>
+<td>-15 gratificações por quinzena</td>
+</tr>
+<tr><td>Instrutor</td>
+<td>10 gratificações por semana</td>
+<td>-10 gratificações por semana</td>
+</tr>
+</tbody></table>
+<div class="card">
+<p><strong>§ 1°</strong> O instrutor que não cumprir a meta semanal por duas semanas consecutivas receberá, ao término da segunda semana, as gratificações referentes ao não cumprimento da meta e será expulso da função, levando consigo outras 200 gratificações negativas.</p>
+<p><strong>§ 2°</strong> O coordenador que não cumprir a meta quinzenal por duas quinzenas consecutivas receberá, ao término da segunda quinzena, as gratificações referentes ao não cumprimento da meta e será rebaixado ao cargo de instrutor.</p>
+</div>
+<section class="chapter"><h2>CAPÍTULO III</h2></section>
+<p>CRIMES ADMINISTRATIVOS</p>
+<article class="article"><p> <strong>Art. 8° -</strong> Considera-se crime administrativo na Academia de Polícia Militar, todo e qualquer ato de omissão de informações, abandono de dever/negligência, conduta imprópria e qualquer outro tipo de comportamento que não condiz com os valores da academia.</p></article>
+<article class="article"><p> <strong>Art. 9° -</strong> O membro que permanecer ausente da Academia de Polícia Militar por período igual ou superior a 5 (cinco) dias, sem apresentar justificativa ou solicitar licença conforme as normas deste Regimento, será desligado da Academia por abandono de dever, ressalvados os casos devidamente autorizados pelo Comando da APM.</p></article>
+<article class="article"><p> <strong>Art. 10° -</strong> O membro da Academia de Polícia Militar que for pego pulando script ou falsificando aula será expulso da academia, levando 200 gratificações negativas.</p></article>
+<article class="article"><p> <strong>Art. 11° -</strong> É absolutamente proibido manipular/falsificar provas para prejudicar outro membro. Caso o membro use de má fé, seja ela com utilização de print's falsos ou não, estará cometendo o crime de falsificação de informações.</p></article>
+<article class="article"><p> <strong>Art. 12° -</strong> Segue abaixo motivos para advertências e suas punições:</p></article>
+<div class="card">
+<p><strong>I.</strong> <strong>Postagem Duplicada:</strong> advertência verbal, em caso de reincidência, agrava-se tal punição.</p>
+<p><strong>II.</strong> <strong>Erros de horários/datas:</strong> advertência verbal, em caso de reincidência, agrava-se tal punição.</p>
+<p><strong>III.</strong> <strong>Considerar questões incorretas:</strong> advertência verbal, dependendo da gravidade, agrava-se tal punição.</p>
+<p><strong>IV.</strong> <strong>Negligências na aplicação de aulas/avaliações:</strong> advertência escrita, dependendo da gravidade, agrava-se tal punição.</p>
+<p><strong>V.</strong> <strong>Negligências na realização de funções:</strong> advertência escrita, dependendo da gravidade, agrava-se tal punição.</p>
+<p><strong>VI.</strong> <strong>Reincidência ou deliberados erros:</strong> advertência escrita, dependendo da gravidade, agrava-se tal punição.</p>
+<p><strong>Parágrafo único.</strong> &nbsp;O membro receberá uma advertência na Academia de Polícia Militar caso deixe de postar sua respectiva atividade no tópico de "Postagem de atividades"; passe do limite estipulado para cada avaliação da atividade; deixe de postar alguma aula/atividade; aplicação incorreta da avaliação, entre outros fatores que possam ser agregados com uma advertência.</p>
+</div>
+<section class="chapter"><h2>CAPÍTULO IV</h2></section>
+<p>LICENÇA DE SERVIÇO E REINTEGRAÇÕES</p>
+<article class="article"><p> <strong>Art. 13° -</strong> Membros que necessitarem se ausentar por um determinado período de tempo deverão solicitar um pedido de licença. O tempo mínimo para o afastamento deverá ser de 07 dias até o máximo de 30 dias, sendo permitida a reserva somente para casos específicos.</p></article>
+<article class="article"><p> <strong>Art. 14° -</strong> A licença só poderá ser permitida em casos onde o membro também esteja afastado dos demais setores, ou seja, deverá estar em licença pelo Centro de Recursos Humanos.</p></article>
+<article class="article"><p> <strong>Art. 15° -</strong> Os cargos de instrutor e coordenador poderão solicitar sua licença à qualquer membro do comando da subcompanhia. O Comando está isento de permissão, bastando apenas o aviso prévio aos demais membros da mesma.</p></article>
+<article class="article"><p> <strong>Art. 16° -</strong> A reserva, período de licença superior à 30 dias, só poderá ser concedido aos membros que ocupem os cargos do comando, ou caso sejam membros do Estado-Maior. O tempo máximo que um membro pode passar em reserva será de 90 dias.</p></article>
+<article class="article"><p> <strong>Art. 17° -</strong> Todos os membros em licença/reserva deverão postar o seu retorno em até 24 horas após o prazo final estabelecido, podendo regressar à suas funções antes do término previsto. Em caso de não cumprimento, o membro será expulso da academia.</p></article>
+<article class="article"><p> <strong>Art. 18° -</strong> Todos os coordenadores+ que se reformem ou se desliguem de forma honrosa da instituição ou da academia poderão solicitar sua reintegração, devendo possuir permissão do comando. A reintegração deverá ser obrigatoriamente como instrutor, estando condicionada às vagas existentes para cada matéria.</p></article>
+<article class="article"><p> <strong>Art. 19° -</strong> A reintegração tem um prazo de 06 meses para ser requerida, tendo o início do prazo contado a partir da saída da instituição, podendo ser feita em qualquer carreira, desde que esteja dentro do prazo. Caso o tempo seja excedido, o membro não terá mais direito à reintegração.</p></article>
+<div class="card">
+<p><strong>Parágrafo único.</strong> &nbsp;A reintegração só poderá ser usada uma vez, ressalvo caso o membro atinja o cargo de coordenador+ novamente.</p>
+</div>
+<article class="article"><p> <strong>Art. 20° -</strong> Membros que forem expulsos da academia, desligados de forma desonrosa ou exonerados da instituição, não terão direito a reintegração na academia.</p></article>
+<section class="chapter"><h2>CAPÍTULO V</h2></section>
+<p>SETOR DE FISCALIZAÇÃO</p>
+<article class="article"><p> <strong>Art. 21° -</strong> O Setor de Fiscalização é um grupo que faz parte do setor de segurança da Academia de Polícia Militar, com objetivo de investigar casos internos, fiscalizar treinamentos, relatórios e grupos.</p></article>
+<article class="article"><p> <strong>Art. 22° -</strong> A entrada de membros para o setor é feita de forma burocrática entre os membros.</p></article>
+<article class="article"><p> <strong>Art. 23° -</strong> A hierarquia do Setor de Fiscalização divide-se em três (03) cargos, sendo eles:</p></article>
+<div class="card">
+<p><strong>Fiscalizador -</strong> Existem duas (02) vagas para o cargo;</p>
+<p><strong>Vice-líder -</strong> Existem uma (01) vaga para o cargo;</p>
+<p><strong>Líder -</strong> Existe uma (01) vaga para o cargo.</p>
+</div>
+<article class="article"><p> <strong>Art. 24° -</strong> O fiscalizador tem como função denunciar qualquer tipo de infração cometida pelos instrutores e coordenadores através das planilhas, como também fiscalizar os grupos envolvendo a Academia de Polícia Militar, retirando os policiais quando necessário.</p></article>
+<article class="article"><p> <strong>Art. 25° -</strong> O vice-líder é responsável por garantir a segurança de toda a estrutura do grupo, e representar o líder em sua ausência.</p></article>
+<article class="article"><p> <strong>Art. 26° -</strong> O líder é responsável por todo o grupo, é seu dever organizar e manter toda a estrutura do grupo.</p></article>
+<section class="chapter"><h2>CAPÍTULO VI</h2></section>
+<p>ESTRUTURA DA ACADEMIA</p>
+<article class="article"><p> <strong>Art. 27° -</strong> É considerado propriedade física ou intelectual da Academia de Polícia Militar todos os quartos e grupos no Habblet Hotel que sejam direcionados a qualquer atividade da academia, o fórum da academia, assim como todo o conteúdo que esteja nele, bem como qualquer setor que esteja sob jurisdição da Academia de Polícia Militar.</p></article>
+<div class="card">
+<p><strong>Parágrafo único.</strong> &nbsp;As dependências da Academia de Polícia Militar são restritas a seus membros e policiais que estão recebendo seu curso, qualquer policial que não seja membro e que não esteja participando do curso fornecido pela academia, só poderá permanecer em uma das dependências da academia com autorização do comando da academia.</p>
+</div>
+<article class="article"><p> <strong>Art. 28° -</strong> A manutenção do fórum da Academia de Polícia Militar é realizada pelos moderadores do mesmo. Os moderadores são escolhidos pelo comando da academia, e não existe nenhum requisito básico para tal escolha.</p></article>
+<article class="article"><p> <strong>Art. 29° -</strong> A manutenção de todas as dependências físicas da Academia de Polícia Militar no Habblet Hotel é realizada pelo comando.</p></article>
+<article class="article"><p> <strong>Art. 30° -</strong> Qualquer alteração na estrutura, dependências físicas ou propriedades intelectuais (fórum da academia) da Academia de Polícia Militar, deve ser autorizada pelo comandante. Caso seja realizada qualquer alteração não permitida pelo comandante, o autor estará sujeito a punições. A punição será escolhida e efetuada pelo comandante após a análise do caso.</p></article>
+<article class="article"><p> <strong>Art. 31° -</strong> Em caso de ataque a qualquer dependência da Academia de Polícia Militar, o autor e seus auxiliares serão imediatamente exonerado (tempo indeterminado) da Central Intelligence Agency.</p></article>
+<section class="chapter"><h2>CAPÍTULO VII</h2></section>
+<p>CONSIDERAÇÕES FINAIS</p>
+<article class="article"><p> <strong>Art. 32° -</strong> As reuniões da Academia de Polícia Militar são realizadas sempre que o comando ver necessidade para realização. O comandante tem autonomia para alterar a data e/ou horário da reunião, ou até mesmo marcar mais de duas reuniões ao mês, se houver necessidade.</p></article>
+<article class="article"><p> <strong>Art. 33° -</strong> Os membros que fazem parte da Academia da Polícia Militar têm a obrigação de comparecer em todas as atividades relacionadas com a mesma, em casos em que o membro não possa comparecer, o mesmo deverá apresentar uma justificativa plausível no tópico Quadro de Atividades.</p></article>
+<div class="card">
+<p><strong>Parágrafo único.</strong> &nbsp;O membro que não justificar a ausência das atividades levará 20 gratificações negativas efetivas.</p>
+</div>
+<article class="article"><p> <strong>Art. 34° -</strong> Os policiais que forem aprovados na Academia de Polícia Militar não terão que realizar o mesmo no futuro, se ainda tiverem registros de sua conclusão, com exceção dos banidos que perdem este direito.</p></article>
+<article class="article"><p> <strong>Art. 35° -</strong> Quaisquer alterações neste documento devem obter a autorização prévia do Comando da Academia da Central Intelligence Agency.</p></article>
+</template>
+
 <script>
 (function () {
 'use strict';
@@ -282,9 +524,22 @@ const GRUPO_APM = 'APM';
 // A ordem também define a ordem da liderança no Mural.
 const CARGOS_RESTRITOS = ['Comandante', 'Subcomandante', 'Coordenador'];
 
+/* ---------- Insígnias da E-Academy ----------
+   Data URIs copiados de conteudo/insignias.txt, sem alterar nenhum caractere.
+   Vazio = o card mostra o ícone do módulo no lugar. */
+const INSIGNIA_CFO = 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAACcAAAAnCAYAAACMo1E1AAAFnUlEQVR4AczYO28dVRAH8Bn4BihSIhpkEFXSpKRH4EgUKVJQhYrHF0jFQxGCKh0VjyodRQp3MQiqFBSRSGPTBLBC5UgRdSjwsr89zPXZvbbsmIbI/52Z/zzOnLlnN3vvc9H+DaP4vyE0N9y9ezf29/djGIYz4yw1rAnWJQtqGZbmRvnf/y5fvhwPHjw4VaHHjx9PcefPn59k2ZPRXWbNbW9vR48u7kRVY1euXDkxTkA1tdTZPWbNcWxubgbQYXd3N6D0zIzMnLji+UyONIXiSchsOfyAg9KfPHkSwO6x1hyn6ZFw8eLFgMyMS5cuxdtfx/QPB5MxXi5cuBAHBwdBFk/C6J7yMluTOLAREs6dOydshiOb6ycnOjOn4hr78xGmwe6hWfNr8SXlyYfMNvmalhg69FXWmjM1qKDM1pji8P3nMd3R/HYMmTlNDWd6mTlNm83vbpQnHzToU+CrGPpyerPmTMyhBrpEUFBxsJCd9hDz6NE+ESXLj6Tv7OyEfFAPX8hsH7cbBYqfNVeknWW2BLqC5ctsU7HTQvl62fvoJlV+9d74MKYbK7N9MnHEvyObE6cpsnbJBhyYRoF9GsiHPnZp97615nxs374XUU3VLiXh+emmUWCfBHnyxZmaunTr4PnZPdaaM406HwKrkAJ4fjxZYC9RvpL88tXRmLo4usbEsXusNVfTkCCwktnlw7uzehvXo3wl+ejqgLo4OslH9lg15+GZ2Z4/dpGZU5zkzFwdXj7wTCKnoGMu/D0yD+uoKy2zrVl6ZlInrJpjOZzuqtqF0We2u4lPDF8P3HHo4+ji1IHMDPVxfJltHXZh1hyyEulGz6Y7K85MP4nS+ZcoX0l++erQ1VWfnrneGH7WnDsHKZEEHNDt8CjwLbGM48eR6gEdar2ew6+a86JnJ3bWB+HAriWYBHkaiO0hRx31gA3Wsy6uziJ+1RyDAwSx60zg7DqzvZlkHh5accdBDjjHkNn+d1FPTtW3Hg7whVlzRQoCScVltnNRH0Hxx8nlxORB5uHdqb5JgvhlrVlzmbl6ZFSg3WW2xnA+AvIkmFhBbOVp0BTVxYthQ2aiVpg1h5UMmS3Q7vCKA9tUa6clnz79S9gK+ILJyJMPgthkZtu4Ndk91porZ+2s7CpWdu2UxN2/vzu9Lt279zNzemvmA9OZyPGyrDNS4WYgl5g1Z4cCQWDfIF1hU8vMeLidMfzSpiv2+vW3YmPjxSDZUDGZY+z4tVO+Onzw1c2M377LIGtNfGHWnB1aHBSCCiw9szV0e2uIj78YpiY1cRQqRo3Mlld1NIX/4SfXmJps2uF11tzuv9+0nBVTBI2SUvpdf/ZlBLy6OQTcuDVEgQ38IBcqX2OaeveTv6PAxme2TYifNWdyBWcFMtuzTbBdLw+u5mHrRxERJBsa067y5LM0QsLe3h4xoecRs+YQpgZ0BXvgnI2aADszp8cP/daNJCY7s+kI8fLo8Pprrg0bGxtNGa89P5rTbyXkCjU5hIJu/YJFoCZA17xYcMZIwPPTxdMLr7w5hEa++fT5KLDx/cTXJueLrsk5Z6DwElUAbwMagHeuHk4Lz49f1sFphNQUWTa9sNacr2b9W65GlpCMI2sa9Jpcz3mh8GmI7yH+/ZtDaIpkiyULs+Zqat5yBZjgUuIyczpXProXXorp++hHH0SYnGefieH5+zdstWoN+nDtWmxFxO8j/BkMWZg1h6ypKWLHuF6WbmG+JX79Y85UXOVpoPSK3BibLN26pa81x1EB5FEQ40wV2DsPI25vtWcdu3wke1kHt3fnTlyNCHIUIYYsrJrz+9pp4ZfHHop5vnngkr2v9GVtOS+PF35yVKcfH8XRQXPpt5GzQhEL9MCdVE8MiCOBXhjt1NwoI8fLmVDFlvKs9bq89Yfw6HzWv+M29ax11uL/AQAA//+9NFR9AAAABklEQVQDAO5LlouhfEhwAAAAAElFTkSuQmCC';
+const INSIGNIA_AFO_B = 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAACcAAAAnCAYAAACMo1E1AAAFSUlEQVR4AczYv25cVRAG8PO5ITWKZIsGpaCyGyOlTIWEbKqUFJHoEC+QCkqo8gKIjlSUKZBsIfEMbmya0EBlSxavsOzvXmb33Lvr2NhNrHyemW/+nDlzzr3x7k4bfxZL8b6haW5xcnLSLi8v22KxuDfuU8OaYF2yoJZhaW4pH/7v8PCwnZ2d3anQ1dXVELe7uzvIsgej+zVp7vT0tPXo4m5V9/b22vHxcUtya2w1JbDX2T0mzXEcHR01oMPFxUWD0pMMDeAAn6R9901rb0/TFn+Mfjw/JGuu50u/vr5uwO6x0Ryn6ZGwv7/fIEk7ODhoX/7Uhh8cDEb368+/1wY/YOQlY5M4cJwkPH78WNgEW5vrJyc6ydCUBf75CzPCVIB1/ra1n98s2stXHvo2mTa/PPmQZPDXtNSgg9jCRnOmBhWQjI0pDr/90IYnmt+OwdP25ndMayQbjyHZ8uSDBp0CX8XQ59ObNGdiLjXQJYKCioOF7LSHGPjqeYhhKuVH0M/Pz5t8UA9fSDLcYw8HFD9prkg7S8YEuoLlSzLcQTstlM+x0osnyzYpOqj3+bdtaCgZT6Zt+dnanDhNkbVLNuDANApsqMnRt0E+9L653fs2mnNsv3zdWjVVu5SE56ebSoEN9TDQ55AnH29q6tKtg+dn99hozjTqfgisQgrg+fHJeOzJKJ9/hm2NTEYuGWXlyFdHY+rKoGusYnCFjeZqGhIEVTK7fMn6pVsv31cv0wpexlC+um/y1QF11aeTfGSPVXP++0nG949dJBniJCdZXV6+wbH85QH4/sfWPjlabMUyZHj3kfKSdR118cm4ZulJqANWzbFcTrusXRh9Mj5NfGL4FNYU0PGvX//aCmw8P9Dl4dWBJE19HF8yrsMuTJpDViLd6Nl0d8WdMQGgA53/2bNP24sXX7SnT/eZw7uOHyqGro4AddWnJ5uN4SfNeXKQEknAAd0Ot4Gv8OjRB4M6j0PiSPWADrVez+FXzflDz07srA/CgV1LqCnQb4PYHuLVUQ/YYD3r4lwBHKyaY3CAIHbdCZxdJ+NfJsn60oq7CXLAPYZk/N9FPTlV33o4wBcmzRUpCCQVl4z3oo6g+JvkfGLyIFk/neqbJIif15o0l2T1yqhAu0vGxnCOgLwNJlYQW3kaNEV18WLYkAS1wqQ5rGRIxkC7wysObFOtnZYU0wNfMBl58kEcm0zGjVuT3WOjuXLWzsquYmXXTsnieokvmE755nXm61QcOWnODj01wNkn0hU2teTm3cormAYky88Wy4+d8tUpf+nWA7XLR06as0MBoBAIgtKT8bhx/wfJmFd15NLBeoDrMWnu4r9PWu6KKYIkUlLtlO7uAP0m8EP5K1/NHuWfy0lzJleo+5KM7zaJdumYSmdbhD0Hnh/45JWeZPVWSMK9FZPmRJga0BXsgXM3agLsZHvxZM2Llye+r0fH1Xr0HhvN1eQEKehYChaBmgC9FhDfA8+PE0+HqkWqz29N0udYsrDRnAA7cc9A4TkcmQL4WoDdA8+Pe1cdPutB/8lL3kZzAnx+tBvQyBwScaRpkHMU7w+Kd9XhKxhMX2fSHKcd1CdvuuBe0pMMF9rRffhxG74NePLkI6GN7Pn+L2wBtYY6gCtpMOzCpDlkTU0RO8L1snQN8IEjJAu9XXGVpwF6QQ6dBOuSsNEcsgLIbRCjgYKj84Xfzs7O8CUku3yk+G11tnFiC6vmfPF3V2ikh6PzFYaidHV6Px13V6gDmovC94UiFu+Bu2+9ylvWiOaWsmX5616oYnN533pd3vCF9dJ+0L+bNvWgopL/BQAA//8rb/KHAAAABklEQVQDAHx6nItpcwZyAAAAAElFTkSuQmCC';
+const INSIGNIA_AFO_I = 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAACcAAAAnCAYAAACMo1E1AAAFVElEQVR4AczYTYscVRQG4PvqXwgkC0FGcWOyCa7UpV/JLosg2avJPxBBkCAIgr/AKK5Vssgu8WupriSbjBvRIeAigeA/kLaeqjk9t7rLYWgVHPqtc857Pu+tW93T/Vib/laD+L+hGW51+/bt9uDBg7ZarXbGLjX0BH3Jglo2y3CD/Oev8+fPtzNnzpyo0MOHD8c48ZBktDcvs+Hu3LnTemwGs5O0ZAK7cPfu3VJnMplik6z5Gujj62m/fpVG4mAdNCiz4Qa7XbhwYQQd9vf3GyQZh3ILoHwkXLx4cTwSScZ4nDxSPCRTDZyhyG9/dG3jkJN2dN0ajsvukXD27Nl27ty5sbEGuCSjzccufPTZF6NaPCknycjTKQYz1Fvv/dkKbHy/e4vD2T1FIJkGocMv938nRtgZSKZb8/YbV8ZblGzvXp9nkLHAcDk4OBiu06vnMVvD2TXgTP5+MH47A/Rr16cnnWQXXxJXA778PGvC3t7epAzXnh/M8a2EHGHHnB2gj+TCZTW85STT7tg5ITjNSTYekvkC+Z9+bdUM8sn7j7cCG88vH7Z2DnnlRlsf/nb4p/Gh2uiKOItAx/GTbDzQcXxQukHYhiLLphcWhyvncVITjaHibn33fanjA8Mnbk0eKniqI2Aokl08HbaGE/D5Va7jYRCN6wndjMbzi9v0lb26fLndaq39NmDptTWcc3Lv3r2l2P+M2xuGXCq+NZynC5aC/23u4ObNdqm1Rg5i67UezptfMn8Ct6I74tJLL7bjbplQfnH0JTx1SJZMMj6Ih/T8rcRT6gk7yc5p7E0XnC8FaxA2HsTxLcH5xpfUn11Y71wRApKMZjJJxjNPPkGM0FBjZxPoOE6SjQc6jg+qjoGSqX6Spi9/j9lwf9yfXEuBk2e6aqi4HQYszhAkGw/iisMvofpV/4pZD+cfva8/aM3bSB+UTKuTUKumb+Lq660ZgiyfJx/K7vOTo7r66au/xVT8ejgEBwhiv/qua5sd0r5B6/6ee3b68CeLtnPA7vOSabCqr5++ILYwG65IQSAJR0+yHrJsvh6vvHBk2TFIjj5bk6mGsyhSfTqIxfWYDZdMyUnWMVaXTAfW2UiyHnIdtKDYMeBKphz54B1BXT4xbEiCWmM2HFYyJFOg1eGdC6DbOaulL624eD5xgJMP9KqbHC0c32NruHLWysquYmXXSsnieokv2J3ybdbZ7FNx5Gw4K/TUAGefSFfYriXbq/3p51X78NNVI+WCOwDJdO7kq8MHpesHauMLs+GsUAAoBBVYejLd7uJLekrfeTONLK6XyZRXdfjooB/gesyG2z/8ptWfFUl2VFKtlO7sAL3wzQ+lTZIfJqu1ylezR/k35Ww4O1eo85Jk/PYl0SrdptLZmrDdzgIbzw9seaUnGZ/4ZJL8S5gNJ8CuAV3BHjhno3aAnYQYb2d/W5OJ5xQvj97Xo+OqH73H1nC1c4IUdFsKmkDtAL0aiO9vK54fL54OVYtUn19Psn6moMPWcAKsxDkDhTfhlknGV4O6pSQfnp9+XB0+/eD06dPC19gaTsCpU6ea1YBBNiEbR4IPe09pgY0H/1AcV4evYGPkFGbDcVrBo0ePRj+d0kt6kvFAu3X8hvK5CmWT/P1/2LjqoQ7gStoYdmE2HLJ2TRErwvWydI35evRnrviKqzwD0Avi6CToS8LWcMgKIJcgxpkCOvSD9eeuYpbqLHFqFdbD+X3tpPDLY0GhGmZTrxjypLXFqQOGi99GdoXGN75s7dr11Qg6KL5rTXlDfgw3yJbhshMOCw3pW6+d6g1VKm/+1XBw7PKqYptyl1qznL8AAAD//7hzlAIAAAAGSURBVAMAxcZVi991bBEAAAAASUVORK5CYII=';
+const INSIGNIA_AFO_A = 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAACcAAAAnCAYAAACMo1E1AAAFW0lEQVR4AczYv4tdVRAH8DPahNSBpBBkFRuTJlippYpJFyGIvT/yFyhWEqyE/AX+wF4JmC4RtVQrSZO18cciWOzC1iGNed7POW/unvvudV2eCi7ve2fmO3Nm5sw9971975HS/laD+L+haG51+/btsr+/X1ar1dbYJoeaoC6ZkMuwNDfIf/66ePFiOXfu3IkSHRwc1DjxEBHV3rxMmrtz507psRnMjogS0cBO3L17N9WJjGixETHy2dCH16P88mUUEgdj0KBMmhvscunSpQo67O7uFoiI2pRbAOkj4fLly/VIRESNx1lHioeIlgOnKfLr711LbbJpR9dZc1ymR8L58+fLhQsXamEFcBFRbT524sann1U1edKaiKg8naIxTb353h8lwcb301tszvQkgYjWCB1++u13osJkIKLdmndef63eooj59Pp1GqkJhsve3t5wba+ex8yaMzXgjPjrxvhNBujXrrcnnWQnnxKXDb74LKthZ2enKcO15wezvpWQFSbm7AC9kguX1fCWE9GmY3JCcIqTbDxETDfI/+TLq6KRj99/tCTYeH7rYTY55BenT4+Hnw0Kk0CXxFkEOu7vfOknNUJqikybnlhsLp3HSc1oCjLu1jffplofGD5xI7lW8FRHQFMkO3k6zJoT8Mr9+3zHQiMK5xO6GYznF7fpS3t19Wq5VUr5dcDSa9acc3Lv3r2l2P+M2xmaXEo+a87TBUvB/za3d/NmuVJKIQcxe43NefOLmD6Bs+iOuPLC8+W4WyaUXxx9CU+syZQRUR/ENT19K/GUevpOMjmFvemC8yVhNsLGgzi+JTjf+JTqsxPj5JIQEBHVjGiS8dTjjxEVCirsbAIdx0my8UDH8UHm0VBEyx8RRV3+HpPmfn74sPqWAqtjfVFQchMGNE4TJBsP4pLDLyHrZf2MGZvzj97bDx4UbyN9UETbnQW5a/om3nq1FE2Q6fPkQ9r9+oijvOqpq77NZPzYHIIDBLFvnDpFTA5pX6A615dnnm4f/uSaKiYH7H5dRGss86unLohNTJpLUhBYhKNHxNhk2nw9XnruyDIxiDj6bI1oOZxFkfLTQSyux6S5iLY4IsYYu4uIemCdjYgYmxyDFhQTA66ItsZ68I4gL58YNkQEasSkOazFENEC7Q7vXADd5OyWvrTj5PnEAc56oGfeiKON43vMmktn7iztTJZ27pRMrpf4hOmkbzPPZp2MIyfN2aGnBjj7hXSJTS1ivtsfflyVDz5ZFdJacAcgop076+Xhg9TVA7nxiUlzdigAJIIMTD2i3e7kU3pK330jCplcLyPauszDRwf1ANdj0tzu+ptWf1YsMlGLcqd0Zwfoia++S61JfmhWKblezh7p35ST5kwukeclIuq3Lwvt0m1Kna0I2+1MsPH8wLYu9YioT3xEk/xLmDQnwNSALmEPnLORE2BHBFFvZ39bIxrPKd46ep+Pjst69B6z5nJygiR0WxKKQE6AngXE97cVz48XT4fMRcrPryaZP1PQYdacADtxzkDiTbhlFuOzQN5Skg/PTz8uD596cPbsWeEjZs0JOHPmzPi5qJFNWI0jwYe9pzTBxoN/KExG/Cb4+RIGg0tMmuO0g8PDw+qnU3pJj4h6oN06fk35XIW0Sf7+P2xc1pAHcCkNhp2YNIfMqUliR7hepq4wX4/+zCWfcblOA/SEODoJ6pIwaw6ZAeQSxDhTQIe+sf7cZcxSniVOrsTYnN/XTgq/PCYkymY29YwhT5pbnDygufDbyLZQ+KPPS7l2fVVBB8m3zWndsD40N8gSw2UrrBMNy2evrfINWXLd9Kvh4Njmlck25Ta5Jmv+BAAA//+L798xAAAABklEQVQDALP9nouREZelAAAAAElFTkSuQmCC';
+
+/* ---------- Acesso aos módulos do CFO ----------
+   Hoje: todos os membros da APM. Para restringir os três módulos de uma vez,
+   preencha aqui (ex.: { patenteMinima: 'Cabo', cargos: [] }). */
+const ACESSO_CFO = { patenteMinima: '', cargos: [] };
+
 const CONFIG = {
-  // URL de uma imagem/emblema para o logo (vazio = ícone de escudo)
-  logo: '',
+  // Emblema da APM (sidebar e topo no celular). Vazio = ícone de escudo.
+  logo: 'https://imaging.habblet.city/badge/b2511s36134s164124s19114s17118',
 
   // Banner de fundo do hero (Início)
   banner: 'https://i.ibb.co/49S60NC/apm-banner.png',
@@ -310,19 +565,36 @@ const CONFIG = {
   // Cargos da APM que veem todos os módulos (administrador do System também vê).
   cargosAcessoTotalAcademy: ['Comandante', 'Subcomandante'],
 
+  // Seções da E-Academy, na ordem em que aparecem.
+  secoesAcademy: [
+    { id: 'cfo', titulo: 'Corpo Militar (CFO)', insignia: INSIGNIA_CFO },
+    { id: 'afo', titulo: 'Corpo Executivo (AFO)', insignia: '' },
+    { id: 'instrutoria', titulo: 'Admissão e Graduação', insignia: '' },
+  ],
+
   // Módulos da E-Academy.
+  // - secao: id de uma das secoesAcademy acima.
   // - patenteMinima: patente do System (patente_nome) exigida, "X ou superior".
   // - cargos: cargos no grupo APM permitidos.
   // - Sem nenhum dos dois = todos os membros. Com os dois = precisa cumprir ambos.
+  // - insignia: data URI (constantes no topo). Vazio = usa o ícone.
   // - link: URL da página do módulo (abre dentro do site). Vazio = "Em breve".
   // - ativo: false esconde o módulo sem apagar.
   modulos: [
-    { id: 'especializacao-basica', titulo: 'Especialização Básica', descricao: 'Primeira etapa das especializações da APM.', icone: 'fa-1', link: '', patenteMinima: 'Supervisor', ativo: true },
-    { id: 'especializacao-intermediaria', titulo: 'Especialização Intermediária', descricao: 'Segunda etapa das especializações da APM.', icone: 'fa-2', link: '', patenteMinima: 'Inspetor', ativo: true },
-    { id: 'especializacao-avancada', titulo: 'Especialização Avançada', descricao: 'Última etapa das especializações da APM.', icone: 'fa-3', link: '', patenteMinima: 'VIP', ativo: true },
-    { id: 'teste-admissao', titulo: 'Teste de Admissão', descricao: 'Material do teste de admissão aplicado pelos Instrutores.', icone: 'fa-clipboard-check', link: '', cargos: ['Instrutor'], ativo: true },
-    { id: 'graduacao', titulo: 'Graduação', descricao: 'Conteúdo da graduação, conduzida pela Coordenação.', icone: 'fa-user-graduate', link: '', cargos: ['Coordenador'], ativo: true },
+    { id: 'cfo-modulo-1', secao: 'cfo', titulo: 'CFO Módulo I', descricao: 'Avaliação de Conhecimentos Gerais', icone: 'fa-1', insignia: INSIGNIA_CFO, link: '', ...ACESSO_CFO, ativo: true },
+    { id: 'cfo-modulo-2', secao: 'cfo', titulo: 'CFO Módulo II', descricao: 'Carreira, Militarismo e Conduta', icone: 'fa-2', insignia: INSIGNIA_CFO, link: '', ...ACESSO_CFO, ativo: true },
+    { id: 'cfo-modulo-3', secao: 'cfo', titulo: 'CFO Módulo III', descricao: 'Comando de Base, Direitos, Código Penal Militar e Crises', icone: 'fa-3', insignia: INSIGNIA_CFO, link: '', ...ACESSO_CFO, ativo: true },
+
+    { id: 'especializacao-basica', secao: 'afo', titulo: 'AFO | Especialização Básica', descricao: 'Funções, Segurança e Carreira', icone: 'fa-1', insignia: INSIGNIA_AFO_B, link: '', patenteMinima: 'Supervisor', ativo: true },
+    { id: 'especializacao-intermediaria', secao: 'afo', titulo: 'AFO | Especialização Intermediária', descricao: 'Gestão, Conduta e Desenvolvimento', icone: 'fa-2', insignia: INSIGNIA_AFO_I, link: '', patenteMinima: 'Inspetor', ativo: true },
+    { id: 'especializacao-avancada', secao: 'afo', titulo: 'AFO | Especialização Avançada', descricao: 'Liderança, CPM e Gerenciamento de Crises', icone: 'fa-3', insignia: INSIGNIA_AFO_A, link: '', patenteMinima: 'VIP', ativo: true },
+
+    { id: 'teste-admissao', secao: 'instrutoria', titulo: 'Teste de Admissão', descricao: 'Material do teste de admissão aplicado pelos Instrutores.', icone: 'fa-clipboard-check', link: '', cargos: ['Instrutor'], ativo: true },
+    { id: 'graduacao', secao: 'instrutoria', titulo: 'Graduação', descricao: 'Conteúdo da graduação, conduzida pela Coordenação.', icone: 'fa-user-graduate', link: '', cargos: ['Coordenador'], ativo: true },
   ],
+
+  // Ordem dos cargos no Mural (depois vêm os demais cargos, em ordem alfabética).
+  ordemMural: ['Comandante', 'Subcomandante', 'Coordenador', 'Instrutor'],
 
   // Linha do tempo da seção "Histórico" (Início).
   // Trechos "[PREENCHER ...]" aparecem destacados no site até serem trocados.
@@ -350,6 +622,7 @@ const CONFIG = {
    domínio) o ?dev=1 é ignorado e o login real é usado.
    Parâmetros extras: &nick=Fulano &cargo=Aluno &patente=Supervisor
                       &status=inativo &admin=1 &fora=1 (fora da APM)
+                      &membros=60 (gera membros extras no Mural)
    ============================================================ */
 
 const PARAMS = new URLSearchParams(location.search);
@@ -389,7 +662,12 @@ function criarMockDev() {
     { nick: 'Aluno.Tres', cargo: 'Aluno' },
   ];
   if (PARAMS.get('fora') !== '1') membros.unshift({ nick, cargo });
+  const extras = Math.min(Number(PARAMS.get('membros')) || 0, 500);
+  const cargosExtras = ['Instrutor', 'Aluno', 'Aluno', 'Aluno', 'Coordenador'];
+  for (let i = 1; i <= extras; i++) membros.push({ nick: `Membro.${String(i).padStart(3, '0')}`, cargo: cargosExtras[i % cargosExtras.length] });
   membros.forEach((m, i) => figureCache.set(m.nick.toLowerCase(), Promise.resolve(DEV_FIGURES[i % DEV_FIGURES.length])));
+  // Online simulado: alterna por posição. Responde com atraso, como a API real.
+  const online = new Map(membros.map((m, i) => [m.nick.toLowerCase(), i % 3 !== 1]));
 
   const resposta = (dados, status = 200) => Promise.resolve({ ok: status < 400, status, json: () => Promise.resolve(dados) });
   return {
@@ -397,7 +675,11 @@ function criarMockDev() {
     apiFetch: (caminho) => caminho === '/usuarios/me' ? resposta(usuario) : resposta({ erro: 'mock' }, 404),
     apiSystem: (caminho) => {
       if (caminho === `grupos/${GRUPO_APM}/membros`) return Promise.resolve({ membros: membros.slice() });
-      if (caminho.startsWith('usuarios/')) return Promise.resolve({ nick, grupos: [] });
+      if (caminho.startsWith('usuarios/')) {
+        const alvo = decodeURIComponent(caminho.slice('usuarios/'.length));
+        if (mesmoNick(alvo, nick)) return Promise.resolve({ nick, grupos: [], online: true });
+        return new Promise(r => setTimeout(() => r({ nick: alvo, online: online.get(alvo.toLowerCase()) === true }), 20));
+      }
       return Promise.reject(new Error('mock: rota não simulada ' + caminho));
     },
   };
@@ -442,12 +724,11 @@ const figureCache = new Map();
 const AVATAR_TAMANHOS = {
   b: {
     canvas: { w: 90, h: 130 },
-    box: { cabeca: { x: 28, y: 38, w: 36, h: 32 }, corpo: { x: 28, y: 38, w: 39, h: 82 }, busto: { x: 28, y: 38, w: 39, h: 52 } },
+    box: { cabeca: { x: 28, y: 38, w: 36, h: 32 }, corpo: { x: 28, y: 38, w: 39, h: 82 } },
   },
   l: {
     canvas: { w: 180, h: 260 },
-    // busto = da cabeça até a cintura (usado no Mural)
-    box: { cabeca: { x: 58, y: 74, w: 72, h: 67 }, corpo: { x: 58, y: 74, w: 65, h: 167 }, busto: { x: 58, y: 74, w: 65, h: 105 } },
+    box: { cabeca: { x: 58, y: 74, w: 72, h: 67 }, corpo: { x: 58, y: 74, w: 65, h: 167 } },
   },
 };
 const AVATAR_LIMITE_ESCALA_B = 1.4;
@@ -660,7 +941,7 @@ async function carregarDadosIniciais() {
   if (status && status !== 'ativo') return { tipo: 'inativo', status: usuarioMe.status };
 
   const [publicoRes, membrosRes] = await Promise.all([
-    apiSystem(`usuarios/${encodeURIComponent(nickLogado)}`).catch(() => null),
+    apiSystem(`usuarios/${nickNaUrl(nickLogado)}`).catch(() => null),
     apiSystem(`grupos/${GRUPO_APM}/membros`).catch(() => null),
   ]);
 
@@ -914,6 +1195,21 @@ function cabecalhoPagina(titulo, subtitulo, icone) {
     </div>`;
 }
 
+// Só aceita imagem embutida (data:image/...) — nada de URL externa ou script.
+const dataUriImagem = (v) => /^data:image\/(png|gif|jpe?g|webp|svg\+xml);base64,[A-Za-z0-9+/=\s]+$/i.test(String(v || '')) ? String(v) : '';
+
+// Agrupa os módulos pelas seções do CONFIG; módulo com seção desconhecida vai para a última.
+function secoesComModulos() {
+  const secoes = CONFIG.secoesAcademy || [];
+  const ultima = secoes[secoes.length - 1];
+  return secoes
+    .map(secao => ({
+      secao,
+      modulos: MODULOS.filter(m => (secoes.some(s => s.id === m.secao) ? m.secao : ultima?.id) === secao.id),
+    }))
+    .filter(g => g.modulos.length);
+}
+
 function renderAcademy() {
   const app = document.getElementById('apm-app');
   app.innerHTML = `
@@ -924,15 +1220,25 @@ function renderAcademy() {
           <i class="fa-solid fa-book text-3xl text-subtle mb-3"></i>
           <p class="text-sm text-muted">Nenhum módulo cadastrado ainda.</p>
         </div>` : `
+        ${secoesComModulos().map(({ secao, modulos }) => `
+        <section class="mb-8" data-secao="${escapeHtml(secao.id)}">
+          <div class="flex items-center gap-3 mb-3">
+            ${dataUriImagem(secao.insignia) ? `<img src="${escapeHtml(secao.insignia)}" alt="" class="apm-insignia-secao">` : ''}
+            <h2 class="text-base font-extrabold">${escapeHtml(secao.titulo)}</h2>
+            <span class="text-xs text-subtle">${modulos.length} módulo${modulos.length === 1 ? '' : 's'}</span>
+          </div>
         <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-          ${MODULOS.map(m => {
+          ${modulos.map(m => {
             const bloqueado = moduloBloqueado(m);
             const semLink = !linkSeguro(m.link);
+            const insignia = dataUriImagem(m.insignia);
             return `
               <div class="glass-card p-5 apm-card-click ${bloqueado ? 'locked' : ''}" data-modulo-id="${escapeHtml(m.id)}" tabindex="0" role="button"
                    aria-label="${escapeHtml(m.titulo)}${bloqueado ? ' (bloqueado)' : ''}">
                 <div class="flex items-start justify-between gap-2 mb-3">
-                  <div class="icon-box"><i class="fa-solid ${escapeHtml(m.icone || 'fa-book')}"></i></div>
+                  ${insignia
+                    ? `<img src="${escapeHtml(insignia)}" alt="Insígnia" class="apm-insignia-modulo">`
+                    : `<div class="icon-box"><i class="fa-solid ${escapeHtml(m.icone || 'fa-book')}"></i></div>`}
                   ${bloqueado ? '<i class="fa-solid fa-lock text-subtle"></i>'
                     : semLink ? '<span class="badge badge-gold">Em breve</span>'
                     : '<i class="fa-solid fa-circle-play text-primary text-lg"></i>'}
@@ -945,7 +1251,8 @@ function renderAcademy() {
                 ${bloqueado ? `<p class="text-[11px] font-semibold text-amber-600 mt-3"><i class="fa-solid fa-triangle-exclamation mr-1"></i>Você ainda não cumpre o requisito</p>` : ''}
               </div>`;
           }).join('')}
-        </div>`}
+        </div>
+        </section>`).join('')}`}
     </div>`;
 
   app.querySelectorAll('[data-modulo-id]').forEach(card => {
@@ -1014,14 +1321,73 @@ function ordemCargo(cargo) {
   return i >= 0 ? i : CARGOS_RESTRITOS.length;
 }
 
+// Posição do cargo no Mural: ordemMural primeiro, depois os demais (alfabético).
+function ordemMural(cargo) {
+  const i = CONFIG.ordemMural.findIndex(c => normalizar(c) === normalizar(cargo));
+  return i >= 0 ? i : CONFIG.ordemMural.length;
+}
+
+const compararTexto = (a, b) => String(a || '').localeCompare(String(b || ''), 'pt-BR', { sensitivity: 'base' });
+
+function membrosOrdenadosMural() {
+  return membrosAPM.slice().sort((a, b) =>
+    (ordemMural(a.cargo) - ordemMural(b.cargo)) ||
+    (ordemMural(a.cargo) === CONFIG.ordemMural.length ? compararTexto(a.cargo, b.cargo) : 0) ||
+    compararTexto(a.nick, b.nick));
+}
+
+/* ---------- Status online (bolinha) ----------
+   Busca /usuarios/{nick} de cada membro em paralelo (até 8 por vez), depois
+   que os cards já estão na tela. Resultado fica em cache durante a visita. */
+const statusOnline = new Map(); // nick minúsculo -> true | false
+let statusCarregando = null;
+
+function aplicarStatus(escopo) {
+  escopo.querySelectorAll('[data-status-nick]').forEach(el => {
+    const valor = statusOnline.get(el.dataset.statusNick.toLowerCase());
+    if (valor === undefined) return;
+    el.classList.remove('carregando');
+    el.classList.toggle('online', valor === true);
+    el.classList.toggle('offline', valor !== true);
+    el.title = valor === true ? 'Online' : 'Offline';
+    el.setAttribute('aria-label', el.title);
+  });
+}
+
+function carregarStatusMembros() {
+  if (statusCarregando) return statusCarregando;
+  const fila = membrosAPM.map(m => m.nick).filter(n => !statusOnline.has(n.toLowerCase()));
+  const trabalhador = async () => {
+    while (fila.length) {
+      const nick = fila.shift();
+      let online = false;
+      try { online = (await apiSystem(`usuarios/${nickNaUrl(nick)}`))?.online === true; } catch (e) { /* offline */ }
+      statusOnline.set(nick.toLowerCase(), online);
+      const app = document.getElementById('apm-app');
+      if (app.querySelector('.mural-grid')) aplicarStatus(app);
+    }
+  };
+  statusCarregando = Promise.all(Array.from({ length: Math.min(8, fila.length) }, trabalhador))
+    .finally(() => { statusCarregando = null; });
+  return statusCarregando;
+}
+
+function cardMuralHtml(m) {
+  const ehComandante = ordemMural(m.cargo) === 0;
+  return `
+    <div class="mural-card ${ehComandante ? 'comandante' : ''}">
+      <div class="mural-avatar">${avatarCropHtml(m.nick, { modo: 'corpo', largura: 48, raio: 0 })}</div>
+      <div class="mural-info">
+        <p class="mural-nick" title="${escapeHtml(m.nick)}">${escapeHtml(m.nick)}</p>
+        <p class="mural-cargo">${escapeHtml(m.cargo || 'Membro')}</p>
+      </div>
+      <span class="mural-status carregando" data-status-nick="${escapeHtml(m.nick)}" role="img" aria-label="Verificando status" title="Verificando status"></span>
+    </div>`;
+}
+
 function renderMural() {
   const app = document.getElementById('apm-app');
-  const lideranca = membrosAPM
-    .filter(m => cargoNaLista(m.cargo, CARGOS_RESTRITOS))
-    .sort((a, b) => (ordemCargo(a.cargo) - ordemCargo(b.cargo)) || String(a.nick).localeCompare(String(b.nick), 'pt-BR'));
-  const demais = membrosAPM
-    .filter(m => !cargoNaLista(m.cargo, CARGOS_RESTRITOS))
-    .sort((a, b) => String(a.cargo || '').localeCompare(String(b.cargo || ''), 'pt-BR') || String(a.nick).localeCompare(String(b.nick), 'pt-BR'));
+  const membros = membrosOrdenadosMural();
 
   app.innerHTML = `
     <div class="max-w-6xl mx-auto w-full">
@@ -1033,44 +1399,97 @@ function renderMural() {
           Não foi possível carregar os membros do System agora. Recarregue a página.</p>
         </div>` : ''}
 
-      <p class="text-sm font-bold mb-3">Liderança</p>
-      ${lideranca.length === 0 ? `
-        <div class="glass-card p-8 text-center mb-8"><p class="text-sm text-muted">Nenhum membro da liderança encontrado.</p></div>` : `
-        <div class="grid grid-cols-1 min-[420px]:grid-cols-2 lg:grid-cols-4 gap-x-4 gap-y-14 mb-8 pt-12">
-          ${lideranca.map(m => `
-            <div class="glass-card membro-lider cargo-${ordemCargo(m.cargo)} px-4 pb-5 flex flex-col items-center text-center">
-              <div class="membro-lider-avatar">
-                ${avatarCropHtml(m.nick, { modo: 'busto', largura: 96, raio: 0 })}
-              </div>
-              <p class="text-base font-extrabold mt-2 apm-nick w-full" title="${escapeHtml(m.nick)}">${escapeHtml(m.nick)}</p>
-              <span class="badge ${ordemCargo(m.cargo) === 0 ? 'badge-gold' : ''} mt-1">${escapeHtml(m.cargo)}</span>
-            </div>`).join('')}
-        </div>`}
-
-      ${demais.length ? `
-        <p class="text-sm font-bold mb-3">Membros</p>
-        <div class="glass-card p-2">
-          <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3">
-            ${demais.map(m => `
-              <div class="flex items-center gap-3 p-3 rounded-xl">
-                ${avatarCropHtml(m.nick, { modo: 'cabeca', largura: 36, raio: 10 })}
-                <div class="min-w-0">
-                  <p class="text-sm font-semibold truncate" title="${escapeHtml(m.nick)}">${escapeHtml(m.nick)}</p>
-                  <p class="text-xs text-subtle truncate">${escapeHtml(m.cargo || 'Membro')}</p>
-                </div>
-              </div>`).join('')}
-          </div>
-        </div>` : ''}
+      ${membros.length === 0 ? `
+        <div class="glass-card p-8 text-center"><p class="text-sm text-muted">Nenhum membro encontrado.</p></div>` : `
+        <div class="mural-grid">${membros.map(cardMuralHtml).join('')}</div>`}
     </div>`;
 
-  resolverAvatares(app);
+  aplicarStatus(app);          // o que já estiver em cache aparece na hora
+  resolverAvatares(app);       // sem await: os cards já estão na tela
+  carregarStatusMembros();     // bolinhas atualizam conforme as respostas chegam
 }
 
 /* ============================================================
    PÁGINA: REGIMENTO INTERNO
    ============================================================ */
 
+// O texto do Regimento fica no <template id="apm-regimento-fonte"> no fim da página.
+// Trabalha com os blocos de primeiro nível do texto (capítulo, artigo, card, tabela):
+// Capítulos: blocos que começam com "CAPÍTULO I", "CAPÍTULO II"...
+// Artigos: blocos que começam com "Art. N"; o que vem depois (cards com §,
+// incisos, parágrafo único, tabela) pertence ao artigo até o próximo artigo/capítulo.
+const RE_CAPITULO = /^CAP[ÍI]TULO\s+([IVXLC]+)\b/i;
+const RE_ARTIGO = /^Art\.?\s*(\d+)/i;
+
+function estruturarRegimento(texto) {
+  // Desce por invólucros de um filho só (ex.: <div> envolvendo tudo)
+  let raiz = texto;
+  while (raiz.children.length === 1 && raiz.firstElementChild.children.length > 0) raiz = raiz.firstElementChild;
+  const blocos = [...raiz.children];
+  const capitulos = [], artigos = [], soltos = [];
+  let cap = null, art = null;
+  blocos.forEach(el => {
+    const t = el.textContent.replace(/\s+/g, ' ').trim();
+    if (!t) return;
+    const mCap = t.match(RE_CAPITULO);
+    const mArt = t.match(RE_ARTIGO);
+    if (mCap) {
+      cap = { numero: mCap[1].toUpperCase(), titulo: t, subtitulo: '', el, blocos: [el], artigos: [] };
+      el.id = 'apm-reg-cap-' + cap.numero;
+      el.classList.add('reg-capitulo');
+      capitulos.push(cap); art = null;
+    } else if (mArt) {
+      art = { numero: Number(mArt[1]), cap, blocos: [el] };
+      el.classList.add('reg-artigo-inicio');
+      artigos.push(art); if (cap) cap.artigos.push(art);
+    } else if (art) {
+      art.blocos.push(el);
+    } else if (cap) {
+      // Nome do capítulo logo abaixo de "CAPÍTULO I" (ex.: "DAS DISPOSIÇÕES GERAIS")
+      if (!cap.subtitulo && cap.blocos.length === 1 && t.length < 140) { cap.subtitulo = t; el.classList.add('reg-capitulo-nome'); }
+      cap.blocos.push(el);
+    } else {
+      soltos.push(el);
+    }
+  });
+  return { capitulos, artigos, soltos };
+}
+
+// Destaque da busca, ignorando maiúsculas e acentos.
+function removerDestaques(escopo) {
+  escopo.querySelectorAll('mark.reg-destaque').forEach(m => m.replaceWith(document.createTextNode(m.textContent)));
+  escopo.normalize();
+}
+function destacarTermo(el, termo) {
+  const walker = document.createTreeWalker(el, NodeFilter.SHOW_TEXT);
+  const nos = [];
+  while (walker.nextNode()) nos.push(walker.currentNode);
+  nos.forEach(no => {
+    const original = no.nodeValue;
+    // normaliza caractere a caractere para manter as posições do texto original
+    const norm = [...original].map(c => { const n = normalizar(c); return n.length === 1 ? n : c.toLowerCase(); }).join('');
+    if ([...original].length !== original.length) return; // texto com emoji/surrogates: só filtra, não destaca
+    let i = norm.indexOf(termo), ultimo = 0;
+    if (i < 0) return;
+    const frag = document.createDocumentFragment();
+    while (i >= 0) {
+      frag.appendChild(document.createTextNode(original.slice(ultimo, i)));
+      const mark = document.createElement('mark');
+      mark.className = 'reg-destaque';
+      mark.textContent = original.slice(i, i + termo.length);
+      frag.appendChild(mark);
+      ultimo = i + termo.length;
+      i = norm.indexOf(termo, ultimo);
+    }
+    frag.appendChild(document.createTextNode(original.slice(ultimo)));
+    no.replaceWith(frag);
+  });
+}
+
 function renderRegimento() {
+  const fonte = document.getElementById('apm-regimento-fonte');
+  if (fonte && fonte.content && fonte.content.textContent.trim()) return renderRegimentoTexto(fonte);
+
   document.getElementById('apm-app').innerHTML = `
     <div class="max-w-6xl mx-auto w-full">
       ${cabecalhoPagina('Regimento Interno', 'Normas e condutas da APM', 'fa-scale-balanced')}
@@ -1080,6 +1499,88 @@ function renderRegimento() {
         <p class="text-sm text-muted">O Regimento Interno da APM está sendo preparado e será publicado aqui.</p>
       </div>
     </div>`;
+}
+
+function renderRegimentoTexto(fonte) {
+  const app = document.getElementById('apm-app');
+  app.innerHTML = `
+    <div class="max-w-6xl mx-auto w-full apm-regimento">
+      ${cabecalhoPagina('Regimento Interno', 'Normas e condutas da APM', 'fa-scale-balanced')}
+      <div class="reg-layout">
+        <aside class="reg-sumario glass-card" id="apm-reg-sumario-box">
+          <p class="reg-sumario-titulo">Sumário</p>
+          <nav id="apm-reg-sumario" aria-label="Capítulos do Regimento"></nav>
+        </aside>
+        <div class="reg-principal">
+          <div class="reg-busca glass-card">
+            <i class="fa-solid fa-magnifying-glass"></i>
+            <input id="apm-reg-busca" type="search" autocomplete="off"
+                   placeholder="Buscar no regimento (ex.: gratificações, Art. 12)" aria-label="Buscar no regimento">
+            <span id="apm-reg-contagem" class="reg-contagem" aria-live="polite"></span>
+          </div>
+          <p id="apm-reg-vazio" class="reg-vazio" hidden>Nenhum artigo encontrado para essa busca.</p>
+          <article class="glass-card reg-texto" id="apm-reg-texto"></article>
+        </div>
+      </div>
+    </div>`;
+
+  const texto = document.getElementById('apm-reg-texto');
+  texto.appendChild(fonte.content.cloneNode(true));
+  // O CSS do regimento é o .apm-regimento acima; nada do arquivo original roda ou vaza.
+  texto.querySelectorAll('script, style, link, meta, title, iframe, object, embed').forEach(e => e.remove());
+  texto.querySelectorAll('*').forEach(el => [...el.attributes].forEach(a => {
+    if (/^on/i.test(a.name) || (/^(href|src)$/i.test(a.name) && /^\s*javascript:/i.test(a.value))) el.removeAttribute(a.name);
+  }));
+
+  const { capitulos, artigos, soltos } = estruturarRegimento(texto);
+
+  // Sumário clicável (rolagem suave; não usa #hash para não acionar o roteador)
+  const sumario = document.getElementById('apm-reg-sumario');
+  if (!capitulos.length) document.getElementById('apm-reg-sumario-box').hidden = true;
+  sumario.innerHTML = capitulos.map((c, i) => `
+    <button type="button" class="reg-sumario-item" data-cap="${i}">
+      <span class="reg-sumario-num">${escapeHtml(c.numero)}</span>
+      <span class="reg-sumario-nome">${escapeHtml(c.subtitulo || c.titulo)}</span>
+    </button>`).join('');
+  sumario.querySelectorAll('[data-cap]').forEach(btn => btn.addEventListener('click', () => {
+    capitulos[Number(btn.dataset.cap)].el.scrollIntoView({ behavior: 'smooth', block: 'start' });
+  }));
+
+  // Busca: filtra artigos e destaca o termo
+  const busca = document.getElementById('apm-reg-busca');
+  const contagem = document.getElementById('apm-reg-contagem');
+  const vazio = document.getElementById('apm-reg-vazio');
+  const todosBlocos = [...new Set([...soltos, ...capitulos.flatMap(c => c.blocos), ...artigos.flatMap(a => a.blocos)])];
+
+  const filtrar = () => {
+    const termo = normalizar(busca.value);
+    removerDestaques(texto);
+    if (!termo) {
+      todosBlocos.forEach(el => el.classList.remove('reg-oculto'));
+      sumario.querySelectorAll('[data-cap]').forEach(b => b.classList.remove('reg-sem-resultado'));
+      contagem.textContent = ''; vazio.hidden = true; texto.hidden = false;
+      return;
+    }
+    const mNum = termo.match(/^art\.?\s*(\d+)$/);
+    const casa = (a) => mNum ? a.numero === Number(mNum[1])
+                             : normalizar(a.blocos.map(b => b.textContent).join(' ')).includes(termo);
+    const achados = new Set(artigos.filter(casa));
+    todosBlocos.forEach(el => el.classList.add('reg-oculto'));
+    achados.forEach(a => a.blocos.forEach(el => {
+      el.classList.remove('reg-oculto');
+      if (!mNum) destacarTermo(el, termo);
+    }));
+    capitulos.forEach((c, i) => {
+      const tem = c.artigos.some(a => achados.has(a));
+      if (tem) c.blocos.forEach(el => el.classList.remove('reg-oculto'));
+      sumario.querySelector(`[data-cap="${i}"]`)?.classList.toggle('reg-sem-resultado', !tem);
+    });
+    contagem.textContent = `${achados.size} artigo${achados.size === 1 ? '' : 's'}`;
+    vazio.hidden = achados.size > 0; texto.hidden = achados.size === 0;
+  };
+  let espera = null;
+  busca.addEventListener('input', () => { clearTimeout(espera); espera = setTimeout(filtrar, 150); });
+  busca.addEventListener('keydown', (e) => { if (e.key === 'Escape') { busca.value = ''; filtrar(); } });
 }
 
 /* ============================================================
