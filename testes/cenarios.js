@@ -146,6 +146,17 @@ const TODOS = [...CFO, ...AFO, 'teste-admissao', 'graduacao'];
     ok(dots.every(s => s.classList.contains('online') || s.classList.contains('offline')), 'todas as bolinhas atualizaram');
     ok(dots[0].classList.contains('online'), 'usuário logado aparece online');
     ok(dots.some(s => s.classList.contains('offline')), 'existe membro offline (vermelho)');
+    // visual estilo WaveX
+    ok(d.querySelector('.mural-titulo h1')?.textContent === 'MURAL', 'título "MURAL"');
+    const img = cards[0].querySelector('.mural-busto img');
+    ok(img && /size=l/.test(img.src) && /direction=2/.test(img.src) && /head_direction=2/.test(img.src), 'busto com size=l, direction=2, head_direction=2: ' + (img && img.src.slice(0, 80)));
+    const janela = cards[0].querySelector('.mural-busto');
+    ok(w.getComputedStyle(janela).overflow === 'hidden' && w.getComputedStyle(janela).bottom === '0px', 'janela do busto com overflow:hidden alinhada na base');
+    ok(/image-rendering:\s*pixelated/.test(fonte), 'CSS com image-rendering: pixelated');
+    ok(!cards.some(c => c.querySelector('.avatar-crop')), 'Mural não usa mais o avatar de corpo inteiro');
+    ok(d.querySelector('.mural-grid').classList.contains('cinza-offline'), 'MURAL_CINZA_OFFLINE ligado por padrão');
+    const offlineCard = dots.find(s => s.classList.contains('offline')).closest('.mural-card');
+    ok(offlineCard.classList.contains('offline'), 'card offline recebe a classe para o avatar ficar cinza');
     ok(erros.length === 0, 'erros de JS: ' + erros.join(' | '));
   }
 
